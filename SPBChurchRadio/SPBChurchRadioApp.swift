@@ -12,6 +12,12 @@ struct SPBChurchRadioApp: App {
                 .environmentObject(radioPlayer)
                 .environmentObject(trackListVM)
                 .environmentObject(downloadManager)
+                .onAppear {
+                    radioPlayer.downloadManager = downloadManager
+                }
+                .onReceive(trackListVM.$tracks) { tracks in
+                    radioPlayer.allTracks = tracks
+                }
         }
     }
 }

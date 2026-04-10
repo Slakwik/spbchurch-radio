@@ -324,10 +324,28 @@ struct FileNowPlayingBar: View {
 
             Spacer()
 
+            Button(action: { radioPlayer.filePlayer.shuffle.toggle() }) {
+                Image(systemName: "shuffle")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.accent : .white.opacity(0.3))
+            }
+
+            Button(action: { radioPlayer.playPrevious() }) {
+                Image(systemName: "backward.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+
             Button(action: { radioPlayer.toggleFilePause() }) {
                 Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppColors.accent)
+            }
+
+            Button(action: { radioPlayer.playNext() }) {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
             }
         }
         .padding(.horizontal, 14)

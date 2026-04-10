@@ -24,7 +24,7 @@ struct MiniPlayerBar: View {
                 .frame(height: 3)
                 .padding(.horizontal, 14)
 
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     // Track icon
                     ZStack {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -35,6 +35,7 @@ struct MiniPlayerBar: View {
                             .foregroundStyle(AppColors.accent)
                     }
 
+                    // Title
                     Text(track.title)
                         .font(.system(size: 13, weight: .medium, design: .rounded))
                         .foregroundStyle(AppColors.textPrimary)
@@ -42,15 +43,43 @@ struct MiniPlayerBar: View {
 
                     Spacer()
 
+                    // Shuffle indicator
+                    Button(action: {
+                        radioPlayer.filePlayer.shuffle.toggle()
+                    }) {
+                        Image(systemName: "shuffle")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(radioPlayer.filePlayer.shuffle ? AppColors.accent : AppColors.textSecondary.opacity(0.4))
+                    }
+                    .buttonStyle(.plain)
+
+                    // Previous
+                    Button(action: { radioPlayer.playPrevious() }) {
+                        Image(systemName: "backward.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Play/Pause
                     Button(action: { radioPlayer.toggleFilePause() }) {
                         Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(AppColors.textPrimary)
                             .contentTransition(.symbolEffect(.replace))
-                            .frame(width: 36, height: 36)
+                            .frame(width: 32, height: 32)
                     }
                     .buttonStyle(.plain)
 
+                    // Next
+                    Button(action: { radioPlayer.playNext() }) {
+                        Image(systemName: "forward.fill")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Close
                     Button(action: {
                         withAnimation(.spring(response: 0.3)) {
                             radioPlayer.filePlayer.stop()
@@ -58,8 +87,8 @@ struct MiniPlayerBar: View {
                         }
                     }) {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                            .font(.system(size: 20))
+                            .foregroundStyle(AppColors.textSecondary.opacity(0.4))
                             .symbolRenderingMode(.hierarchical)
                     }
                     .buttonStyle(.plain)

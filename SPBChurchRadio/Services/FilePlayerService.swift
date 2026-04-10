@@ -12,6 +12,10 @@ class FilePlayerService: ObservableObject {
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var isLoading = false
+    @Published var shuffle = true
+
+    /// Called when a track finishes — the ViewModel uses this to auto-play next
+    var onTrackFinished: (() -> Void)?
 
     func play(track: Track, localURL: URL? = nil) {
         stop()
@@ -111,6 +115,7 @@ class FilePlayerService: ObservableObject {
         DispatchQueue.main.async {
             self.isPlaying = false
             self.currentTime = self.duration
+            self.onTrackFinished?()
         }
     }
 
@@ -128,6 +133,11 @@ class FilePlayerService: ObservableObject {
             if let event = event as? MPChangePlaybackPositionCommandEvent {
                 self?.seek(to: event.positionTime)
             }
+            return .success
+        }
+        // Next track command (lock screen / headphones)
+        center.nextTrackCommand.addTarget { [weak self] _ in
+            self?.onTrackFinished?()
             return .success
         }
     }
