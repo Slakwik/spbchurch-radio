@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
+    @Environment(\.horizontalSizeClass) private var hSizeClass
     @State private var selectedTab = 0
 
     var body: some View {
@@ -32,7 +33,8 @@ struct ContentView: View {
                radioPlayer.filePlayer.currentTrack != nil,
                selectedTab != 0 {
                 MiniPlayerBar()
-                    .padding(.horizontal, 12)
+                    .frame(maxWidth: hSizeClass == .regular ? 600 : .infinity)
+                    .padding(.horizontal, hSizeClass == .regular ? 40 : 12)
                     .padding(.bottom, 56)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }

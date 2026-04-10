@@ -2,6 +2,9 @@ import SwiftUI
 
 struct MiniPlayerBar: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+
+    private var isIPad: Bool { hSizeClass == .regular }
 
     var body: some View {
         if let track = radioPlayer.filePlayer.currentTrack {
@@ -24,77 +27,75 @@ struct MiniPlayerBar: View {
                 .frame(height: 3)
                 .padding(.horizontal, 14)
 
-                HStack(spacing: 10) {
+                HStack(spacing: isIPad ? 14 : 10) {
                     // Track icon
                     ZStack {
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .fill(AppColors.accent.opacity(0.12))
-                            .frame(width: 36, height: 36)
+                            .frame(width: isIPad ? 42 : 36, height: isIPad ? 42 : 36)
                         Image(systemName: "music.note")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
                             .foregroundStyle(AppColors.accent)
                     }
 
                     // Title
                     Text(track.title)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
 
                     Spacer()
 
-                    // Shuffle indicator
-                    Button(action: {
-                        radioPlayer.filePlayer.shuffle.toggle()
-                    }) {
-                        Image(systemName: "shuffle")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(radioPlayer.filePlayer.shuffle ? AppColors.accent : AppColors.textSecondary.opacity(0.4))
-                    }
-                    .buttonStyle(.plain)
-
-                    // Previous
-                    Button(action: { radioPlayer.playPrevious() }) {
-                        Image(systemName: "backward.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                    }
-                    .buttonStyle(.plain)
-
-                    // Play/Pause
-                    Button(action: { radioPlayer.toggleFilePause() }) {
-                        Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                            .contentTransition(.symbolEffect(.replace))
-                            .frame(width: 32, height: 32)
-                    }
-                    .buttonStyle(.plain)
-
-                    // Next
-                    Button(action: { radioPlayer.playNext() }) {
-                        Image(systemName: "forward.fill")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary)
-                    }
-                    .buttonStyle(.plain)
-
-                    // Close
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3)) {
-                            radioPlayer.filePlayer.stop()
-                            radioPlayer.activeMode = .none
+                    // Controls
+                    HStack(spacing: isIPad ? 16 : 10) {
+                        Button(action: {
+                            radioPlayer.filePlayer.shuffle.toggle()
+                        }) {
+                            Image(systemName: "shuffle")
+                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
+                                .foregroundStyle(radioPlayer.filePlayer.shuffle ? AppColors.accent : AppColors.textSecondary.opacity(0.4))
                         }
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(AppColors.textSecondary.opacity(0.4))
-                            .symbolRenderingMode(.hierarchical)
+                        .buttonStyle(.plain)
+
+                        Button(action: { radioPlayer.playPrevious() }) {
+                            Image(systemName: "backward.fill")
+                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: { radioPlayer.toggleFilePause() }) {
+                            Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: isIPad ? 18 : 15, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary)
+                                .contentTransition(.symbolEffect(.replace))
+                                .frame(width: isIPad ? 38 : 32, height: isIPad ? 38 : 32)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: { radioPlayer.playNext() }) {
+                            Image(systemName: "forward.fill")
+                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3)) {
+                                radioPlayer.filePlayer.stop()
+                                radioPlayer.activeMode = .none
+                            }
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: isIPad ? 24 : 20))
+                                .foregroundStyle(AppColors.textSecondary.opacity(0.4))
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
+                .padding(.horizontal, isIPad ? 18 : 14)
+                .padding(.vertical, isIPad ? 12 : 10)
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)

@@ -4,6 +4,7 @@ struct DownloadsView: View {
     @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
+    @Environment(\.horizontalSizeClass) private var hSizeClass
 
     private var downloadedTracks: [Track] {
         trackListVM.tracks.filter { downloadManager.isDownloaded($0) }
@@ -21,7 +22,12 @@ struct DownloadsView: View {
                     List {
                         ForEach(downloadedTracks) { track in
                             DownloadedTrackRow(track: track)
-                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .listRowInsets(EdgeInsets(
+                                    top: 6,
+                                    leading: hSizeClass == .regular ? 24 : 16,
+                                    bottom: 6,
+                                    trailing: hSizeClass == .regular ? 24 : 16
+                                ))
                                 .listRowBackground(Color.clear)
                         }
                         .onDelete { indexSet in
@@ -68,37 +74,40 @@ struct DownloadedTrackRow: View {
     let track: Track
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
+    @Environment(\.horizontalSizeClass) private var hSizeClass
 
     private var isCurrentTrack: Bool {
         radioPlayer.filePlayer.currentTrack?.url == track.url
     }
 
+    private var isIPad: Bool { hSizeClass == .regular }
+
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: isIPad ? 18 : 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
                     .fill(
                         isCurrentTrack
                         ? AppColors.accent.opacity(0.12)
                         : AppColors.surface
                     )
-                    .frame(width: 46, height: 46)
+                    .frame(width: isIPad ? 52 : 46, height: isIPad ? 52 : 46)
 
                 if isCurrentTrack && radioPlayer.isFilePlaying {
                     Image(systemName: "waveform")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: isIPad ? 18 : 16, weight: .medium))
                         .foregroundStyle(AppColors.accent)
                         .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
                 } else {
                     Image(systemName: "music.note")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: isIPad ? 18 : 16, weight: .medium))
                         .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textSecondary)
                 }
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
-                    .font(.system(size: 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
+                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
                     .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textPrimary)
                     .lineLimit(2)
 
@@ -122,13 +131,13 @@ struct DownloadedTrackRow: View {
                 }
             }) {
                 Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.system(size: 28))
+                    .font(.system(size: isIPad ? 34 : 28))
                     .foregroundStyle(AppColors.accent)
                     .symbolRenderingMode(.hierarchical)
                     .contentTransition(.symbolEffect(.replace))
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, isIPad ? 6 : 4)
     }
 }
