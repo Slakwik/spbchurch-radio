@@ -14,9 +14,4 @@ struct Track: Identifiable, Codable, Hashable {
     var fileName: String {
         url.lastPathComponent.removingPercentEncoding ?? url.lastPathComponent
     }
-
-    var isDownloaded: Bool {
-        let localURL = DownloadManager.localFileURL(for: self)
-        return FileManager.default.fileExists(atPath: localURL.path)
-    }
 }

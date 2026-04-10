@@ -1,9 +1,9 @@
 import Foundation
+import CommonCrypto
 import Combine
 
 class DownloadManager: ObservableObject {
     @Published var downloads: [URL: DownloadState] = [:]
-    @Published var downloadedTracks: Set<URL> = []
 
     private var activeTasks: [URL: URLSessionDownloadTask] = [:]
 
@@ -21,34 +21,23 @@ class DownloadManager: ObservableObject {
     }
 
     static func localFileURL(for track: Track) -> URL {
-        // Use a hash of the remote URL to avoid filename conflicts
-        let hash = track.url.absoluteString.data(using: .utf8)!
-            .base64EncodedString()
-            .replacingOccurrences(of: "/", with: "_")
-            .replacingOccurrences(of: "+", with: "-")
-            .prefix(40)
-        return downloadsDirectory.appendingPathComponent("\(hash).mp3")
-    }
-
-    init() {
-        loadDownloadedTracks()
-    }
-
-    func loadDownloadedTracks() {
-        let dir = Self.downloadsDirectory
-        guard let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
-        // We'll track by checking existence per-track instead
-        downloadedTracks = []
+        // SHA-256 hash of the full URL — unique per track
+        let data = Data(track.url.absoluteString.utf8)
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        data.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(data.count), &hash)
+        }
+        let hex = hash.map { String(format: "%02x", $0) }.joined()
+        return downloadsDirectory.appendingPathComponent("\(hex).mp3")
     }
 
     func isDownloaded(_ track: Track) -> Bool {
-        let localURL = Self.localFileURL(for: track)
-        return FileManager.default.fileExists(atPath: localURL.path)
+        FileManager.default.fileExists(atPath: Self.localFileURL(for: track).path)
     }
 
     func localURL(for track: Track) -> URL? {
-        let localURL = Self.localFileURL(for: track)
-        return FileManager.default.fileExists(atPath: localURL.path) ? localURL : nil
+        let url = Self.localFileURL(for: track)
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
     func download(_ track: Track) {
@@ -78,7 +67,6 @@ class DownloadManager: ObservableObject {
                     }
                     try FileManager.default.moveItem(at: tempURL, to: dest)
                     self.downloads[track.url] = .completed
-                    self.downloadedTracks.insert(track.url)
                     self.objectWillChange.send()
                 } catch {
                     self.downloads[track.url] = .failed(error)
@@ -95,7 +83,6 @@ class DownloadManager: ObservableObject {
                 self?.downloads[track.url] = .downloading(progress: progress.fractionCompleted)
             }
         }
-        // Store observation to keep it alive (simplified - in production use proper storage)
         objc_setAssociatedObject(task, "progressObservation", observation, .OBJC_ASSOCIATION_RETAIN)
     }
 
@@ -106,10 +93,8 @@ class DownloadManager: ObservableObject {
     }
 
     func deleteDownload(_ track: Track) {
-        let localURL = Self.localFileURL(for: track)
-        try? FileManager.default.removeItem(at: localURL)
+        try? FileManager.default.removeItem(at: Self.localFileURL(for: track))
         downloads.removeValue(forKey: track.url)
-        downloadedTracks.remove(track.url)
         objectWillChange.send()
     }
 }
