@@ -6,53 +6,65 @@ struct TrackListView: View {
     @EnvironmentObject var downloadManager: DownloadManager
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
-                Color(UIColor.systemGroupedBackground)
+                Color(.systemGroupedBackground)
                     .ignoresSafeArea()
 
                 if trackListVM.isLoading {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         ProgressView()
-                            .scaleEffect(1.5)
+                            .controlSize(.large)
+                            .tint(.accentColor)
                         Text("Загрузка треков...")
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .foregroundStyle(.secondary)
                     }
                 } else if let error = trackListVM.errorMessage {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         Image(systemName: "wifi.exclamationmark")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 52, weight: .light))
+                            .foregroundStyle(.tertiary)
+                            .symbolRenderingMode(.hierarchical)
                         Text(error)
-                            .foregroundColor(.secondary)
+                            .font(.system(size: 14, design: .rounded))
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
-                        Button("Повторить") {
-                            trackListVM.refresh()
+                        Button(action: { trackListVM.refresh() }) {
+                            Text("Повторить")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 10)
                         }
                         .buttonStyle(.borderedProminent)
+                        .buttonBorderShape(.capsule)
                     }
                     .padding()
                 } else {
                     List {
                         ForEach(trackListVM.filteredTracks) { track in
                             TrackRow(track: track)
+                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                     .refreshable {
                         trackListVM.refresh()
                     }
                 }
             }
             .navigationTitle("Треки")
-            .searchable(text: $trackListVM.searchText, prompt: "Поиск треков...")
+            .toolbarTitleDisplayMode(.large)
+            .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
             .onAppear {
                 trackListVM.loadTracks()
             }
         }
-        .navigationViewStyle(.stack)
     }
 }
+
+// MARK: - Track Row
 
 struct TrackRow: View {
     let track: Track
@@ -68,92 +80,114 @@ struct TrackRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Play indicator or music icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isCurrentTrack
-                          ? Color.accentColor.opacity(0.15)
-                          : Color(UIColor.tertiarySystemFill))
-                    .frame(width: 44, height: 44)
+        HStack(spacing: 14) {
+            // Thumbnail
+            trackThumbnail
 
-                if isCurrentTrack && radioPlayer.isFilePlaying {
-                    Image(systemName: "waveform")
-                        .foregroundColor(.accentColor)
-                        .symbolEffect(.variableColor.iterative, isActive: true)
-                } else {
-                    Image(systemName: "music.note")
-                        .foregroundColor(isCurrentTrack ? .accentColor : .secondary)
-                }
-            }
-
-            // Title
-            VStack(alignment: .leading, spacing: 2) {
+            // Info
+            VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
-                    .font(.subheadline)
-                    .fontWeight(isCurrentTrack ? .semibold : .regular)
-                    .foregroundColor(isCurrentTrack ? .accentColor : .primary)
+                    .font(.system(size: 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
+                    .foregroundStyle(isCurrentTrack ? Color.accentColor : .primary)
                     .lineLimit(2)
 
                 if isDownloaded {
-                    Label("Загружено", systemImage: "checkmark.circle.fill")
-                        .font(.caption2)
-                        .foregroundColor(.green)
+                    HStack(spacing: 3) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 9))
+                        Text("Загружено")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                    .foregroundStyle(.green)
                 }
             }
 
-            Spacer()
+            Spacer(minLength: 4)
 
-            // Download button
-            downloadButton
-
-            // Play button
-            Button(action: playTrack) {
-                Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(.accentColor)
+            // Actions
+            HStack(spacing: 16) {
+                downloadButton
+                playButton
             }
-            .buttonStyle(.plain)
         }
         .padding(.vertical, 4)
     }
+
+    // MARK: - Thumbnail
+
+    private var trackThumbnail: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(
+                    isCurrentTrack
+                    ? Color.accentColor.opacity(0.12)
+                    : Color(.tertiarySystemFill)
+                )
+                .frame(width: 46, height: 46)
+
+            if isCurrentTrack && radioPlayer.isFilePlaying {
+                Image(systemName: "waveform")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.accentColor)
+                    .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
+            } else {
+                Image(systemName: "music.note")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(isCurrentTrack ? .accentColor : .secondary)
+            }
+        }
+    }
+
+    // MARK: - Download Button
 
     @ViewBuilder
     private var downloadButton: some View {
         if isDownloaded {
             Image(systemName: "arrow.down.circle.fill")
-                .foregroundColor(.green)
-                .font(.title3)
+                .font(.system(size: 22))
+                .foregroundStyle(.green)
+                .symbolRenderingMode(.hierarchical)
         } else if let state = downloadManager.downloads[track.url] {
             switch state {
             case .downloading(let progress):
-                ZStack {
-                    CircularProgressView(progress: progress)
-                        .frame(width: 24, height: 24)
-                }
-                .onTapGesture {
-                    downloadManager.cancelDownload(track)
-                }
+                CircularProgressView(progress: progress)
+                    .frame(width: 22, height: 22)
+                    .onTapGesture { downloadManager.cancelDownload(track) }
             case .completed:
                 Image(systemName: "arrow.down.circle.fill")
-                    .foregroundColor(.green)
-                    .font(.title3)
+                    .font(.system(size: 22))
+                    .foregroundStyle(.green)
+                    .symbolRenderingMode(.hierarchical)
             case .failed:
                 Button(action: { downloadManager.download(track) }) {
-                    Image(systemName: "exclamationmark.circle")
-                        .foregroundColor(.red)
-                        .font(.title3)
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(.red)
+                        .symbolRenderingMode(.hierarchical)
                 }
                 .buttonStyle(.plain)
             }
         } else {
             Button(action: { downloadManager.download(track) }) {
                 Image(systemName: "arrow.down.circle")
-                    .foregroundColor(.secondary)
-                    .font(.title3)
+                    .font(.system(size: 22))
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         }
+    }
+
+    // MARK: - Play Button
+
+    private var playButton: some View {
+        Button(action: playTrack) {
+            Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
+                .font(.system(size: 28))
+                .foregroundStyle(.accentColor)
+                .symbolRenderingMode(.hierarchical)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .buttonStyle(.plain)
     }
 
     private func playTrack() {
@@ -166,17 +200,23 @@ struct TrackRow: View {
     }
 }
 
+// MARK: - Progress Ring
+
 struct CircularProgressView: View {
     let progress: Double
 
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.secondary.opacity(0.3), lineWidth: 3)
+                .stroke(.tertiary, lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(Color.accentColor, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .stroke(
+                    Color.accentColor,
+                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
+                )
                 .rotationEffect(.degrees(-90))
+                .animation(.linear(duration: 0.2), value: progress)
         }
     }
 }
