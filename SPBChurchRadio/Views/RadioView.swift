@@ -4,8 +4,6 @@ struct RadioView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
-    @State private var animatePulse = false
-    @State private var treeGlow = false
 
     private var isLandscape: Bool { vSizeClass == .compact }
     private var isIPad: Bool { hSizeClass == .regular && vSizeClass == .regular }
@@ -16,39 +14,33 @@ struct RadioView: View {
                 // Dark base
                 Color(red: 0.03, green: 0.05, blue: 0.12).ignoresSafeArea()
 
-                // Tree background
+                // Tree background — static, no animation on image itself
                 Image("TreeBackground")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .opacity(radioPlayer.isRadioPlaying ? 0.9 : 0.55)
-                    .shadow(color: AppColors.accent.opacity(treeGlow ? 0.2 : 0.05), radius: 50)
-                    .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: treeGlow)
                     .ignoresSafeArea()
+                    .opacity(radioPlayer.isRadioPlaying ? 0.8 : 0.5)
+                    .animation(.easeInOut(duration: 1.0), value: radioPlayer.isRadioPlaying)
 
-                // Gradient overlays
+                // Gradient overlays for text readability
                 VStack(spacing: 0) {
                     LinearGradient(
-                        colors: [Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.8), .clear],
+                        colors: [Color(red: 0.03, green: 0.05, blue: 0.12), .clear],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: isLandscape ? 60 : 120)
+                    .frame(height: isLandscape ? 50 : 100)
                     Spacer()
                     LinearGradient(
-                        colors: [.clear, Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.75)],
+                        colors: [.clear, Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.85)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: isLandscape ? 120 : 250)
+                    .frame(height: isLandscape ? 100 : 220)
                 }
                 .ignoresSafeArea()
 
-                // Pulse rings
-                pulseRings
-                    .offset(y: isLandscape ? 0 : -30)
-
-                // Content: adaptive layout
+                // Content
                 if isLandscape {
                     landscapeLayout
                 } else {
@@ -56,53 +48,56 @@ struct RadioView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
-            .onAppear {
-                animatePulse = true
-                treeGlow = true
-            }
         }
     }
 
-    // MARK: - Portrait Layout (iPhone portrait, iPad portrait)
+    // MARK: - Portrait Layout
 
     private var portraitLayout: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 16) {
             stationHeader
-                .padding(.top, isIPad ? 40 : 60)
+                .padding(.top, isIPad ? 30 : 16)
 
-            Spacer()
+            Spacer(minLength: 10)
 
-            VStack(spacing: isIPad ? 28 : 20) {
-                nowPlayingCard
-                    .frame(maxWidth: isIPad ? 500 : .infinity)
-                playButton
-                liveStatus
-            }
-            .padding(.horizontal, isIPad ? 60 : 24)
+            // Now playing card
+            nowPlayingCard
+                .frame(maxWidth: isIPad ? 500 : .infinity)
+                .padding(.horizontal, isIPad ? 60 : 24)
 
+            // Play button
+            playButton
+                .padding(.top, 8)
+
+            // Live status
+            liveStatus
+
+            // File player bar
             filePlayerBar
-            Spacer().frame(height: 20)
+
+            Spacer(minLength: 0)
+                .frame(maxHeight: 20)
         }
-        .padding()
+        .padding(.horizontal)
     }
 
-    // MARK: - Landscape Layout (iPhone landscape, iPad landscape)
+    // MARK: - Landscape Layout
 
     private var landscapeLayout: some View {
         HStack(spacing: 0) {
-            // Left side: station info
+            // Left: station info
             VStack(spacing: 12) {
                 Spacer()
                 stationHeader
                 Spacer()
                 filePlayerBar
-                Spacer().frame(height: 8)
             }
             .frame(maxWidth: .infinity)
             .padding(.leading, 20)
+            .padding(.bottom, 8)
 
-            // Right side: controls
-            VStack(spacing: 16) {
+            // Right: controls
+            VStack(spacing: 14) {
                 Spacer()
                 nowPlayingCard
                     .frame(maxWidth: isIPad ? 450 : 320)
@@ -130,39 +125,6 @@ struct RadioView: View {
         }
     }
 
-    private var pulseRings: some View {
-        ZStack {
-            ForEach(0..<3, id: \.self) { i in
-                let baseSize: CGFloat = isIPad ? 260 : (isLandscape ? 150 : 200)
-                let step: CGFloat = isIPad ? 80 : (isLandscape ? 45 : 60)
-                Circle()
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                AppColors.accent.opacity(radioPlayer.isRadioPlaying ? 0.12 : 0.03),
-                                AppColors.accentLight.opacity(radioPlayer.isRadioPlaying ? 0.06 : 0.01)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-                    .frame(
-                        width: baseSize + step * CGFloat(i),
-                        height: baseSize + step * CGFloat(i)
-                    )
-                    .scaleEffect(animatePulse && radioPlayer.isRadioPlaying ? 1.06 : 1.0)
-                    .opacity(animatePulse && radioPlayer.isRadioPlaying ? 0.5 : 1.0)
-                    .animation(
-                        .easeInOut(duration: 1.5 + Double(i) * 0.5)
-                        .repeatForever(autoreverses: true)
-                        .delay(Double(i) * 0.2),
-                        value: animatePulse && radioPlayer.isRadioPlaying
-                    )
-            }
-        }
-    }
-
     private var liveStatus: some View {
         HStack(spacing: 6) {
             if radioPlayer.isRadioPlaying {
@@ -185,7 +147,7 @@ struct RadioView: View {
             FileNowPlayingBar(track: track)
                 .frame(maxWidth: isIPad ? 500 : .infinity)
                 .padding(.horizontal, 16)
-                .padding(.top, 16)
+                .padding(.top, 8)
         }
     }
 
@@ -214,24 +176,12 @@ struct RadioView: View {
         .padding(.horizontal, 20)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.black.opacity(0.4))
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.ultraThinMaterial.opacity(0.3))
-                )
+                .fill(.black.opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(
-                            .linearGradient(
-                                colors: [AppColors.accent.opacity(0.2), AppColors.accent.opacity(0.05)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 0.5
-                        )
+                        .stroke(AppColors.accent.opacity(0.15), lineWidth: 0.5)
                 )
         )
-        .environment(\.colorScheme, .dark)
     }
 
     // MARK: - Play Button
@@ -243,6 +193,7 @@ struct RadioView: View {
 
         return Button(action: { radioPlayer.toggleRadio() }) {
             ZStack {
+                // Glow
                 Circle()
                     .fill(
                         .radialGradient(
@@ -257,13 +208,10 @@ struct RadioView: View {
                     )
                     .frame(width: outerSize, height: outerSize)
 
+                // Button circle
                 Circle()
-                    .fill(.black.opacity(0.3))
+                    .fill(.black.opacity(0.4))
                     .frame(width: btnSize, height: btnSize)
-                    .background(
-                        Circle().fill(.ultraThinMaterial.opacity(0.3))
-                    )
-                    .clipShape(Circle())
                     .overlay(
                         Circle()
                             .stroke(
@@ -277,13 +225,13 @@ struct RadioView: View {
                     )
                     .shadow(color: AppColors.accent.opacity(0.15), radius: 14)
 
+                // Icon
                 Image(systemName: radioPlayer.isRadioPlaying ? "stop.fill" : "play.fill")
                     .font(.system(size: iconSize, weight: .medium))
                     .foregroundStyle(AppColors.accent)
                     .offset(x: radioPlayer.isRadioPlaying ? 0 : 2)
                     .contentTransition(.symbolEffect(.replace))
             }
-            .environment(\.colorScheme, .dark)
         }
         .buttonStyle(GlassButtonStyle())
     }
@@ -352,16 +300,11 @@ struct FileNowPlayingBar: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.black.opacity(0.4))
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(.ultraThinMaterial.opacity(0.3))
-                )
+                .fill(.black.opacity(0.5))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(AppColors.accent.opacity(0.15), lineWidth: 0.5)
                 )
         )
-        .environment(\.colorScheme, .dark)
     }
 }
