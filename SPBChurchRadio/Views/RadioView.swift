@@ -8,36 +8,36 @@ struct RadioView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Pure black base (matches the image background)
-                Color.black.ignoresSafeArea()
+                // Dark base
+                Color(red: 0.03, green: 0.05, blue: 0.12).ignoresSafeArea()
 
-                // Tree background image — centered, with subtle glow
+                // Tree background — pre-processed dark image, fill screen
                 Image("TreeBackground")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 320)
-                    .opacity(radioPlayer.isRadioPlaying ? 0.6 : 0.35)
-                    .shadow(color: AppColors.accent.opacity(treeGlow ? 0.3 : 0.1), radius: 40)
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .opacity(radioPlayer.isRadioPlaying ? 0.9 : 0.55)
+                    .shadow(color: AppColors.accent.opacity(treeGlow ? 0.2 : 0.05), radius: 50)
                     .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: treeGlow)
-                    .offset(y: -30)
+                    .ignoresSafeArea()
 
-                // Gradient overlay — fades top and bottom for text readability
+                // Subtle gradient for text readability at top/bottom
                 VStack(spacing: 0) {
                     LinearGradient(
-                        colors: [.black.opacity(0.9), .clear],
+                        colors: [Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.8), .clear],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 140)
+                    .frame(height: 120)
 
                     Spacer()
 
                     LinearGradient(
-                        colors: [.clear, .black.opacity(0.85)],
+                        colors: [.clear, Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.75)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: 280)
+                    .frame(height: 250)
                 }
                 .ignoresSafeArea()
 
