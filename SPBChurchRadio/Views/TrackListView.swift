@@ -8,36 +8,36 @@ struct TrackListView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                AppColors.background
                     .ignoresSafeArea()
 
                 if trackListVM.isLoading {
                     VStack(spacing: 20) {
                         ProgressView()
                             .controlSize(.large)
-                            .tint(.accentColor)
+                            .tint(AppColors.accent)
                         Text("Загрузка треков...")
                             .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColors.textSecondary)
                     }
                 } else if let error = trackListVM.errorMessage {
                     VStack(spacing: 20) {
                         Image(systemName: "wifi.exclamationmark")
                             .font(.system(size: 52, weight: .light))
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(AppColors.textSecondary.opacity(0.5))
                             .symbolRenderingMode(.hierarchical)
                         Text(error)
                             .font(.system(size: 14, design: .rounded))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColors.textSecondary)
                             .multilineTextAlignment(.center)
                         Button(action: { trackListVM.refresh() }) {
                             Text("Повторить")
                                 .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 10)
+                                .background(AppColors.accent, in: Capsule())
                         }
-                        .buttonStyle(.borderedProminent)
-                        .buttonBorderShape(.capsule)
                     }
                     .padding()
                 } else {
@@ -45,6 +45,7 @@ struct TrackListView: View {
                         ForEach(trackListVM.filteredTracks) { track in
                             TrackRow(track: track)
                                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .listRowBackground(Color.clear)
                         }
                     }
                     .listStyle(.plain)
@@ -57,6 +58,7 @@ struct TrackListView: View {
             .navigationTitle("Треки")
             .toolbarTitleDisplayMode(.large)
             .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
+            .tint(AppColors.accent)
             .onAppear {
                 trackListVM.loadTracks()
             }
@@ -81,14 +83,12 @@ struct TrackRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // Thumbnail
             trackThumbnail
 
-            // Info
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? Color.accentColor : .primary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textPrimary)
                     .lineLimit(2)
 
                 if isDownloaded {
@@ -104,7 +104,6 @@ struct TrackRow: View {
 
             Spacer(minLength: 4)
 
-            // Actions
             HStack(spacing: 16) {
                 downloadButton
                 playButton
@@ -113,32 +112,28 @@ struct TrackRow: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: - Thumbnail
-
     private var trackThumbnail: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(
                     isCurrentTrack
-                    ? Color.accentColor.opacity(0.12)
-                    : Color(.tertiarySystemFill)
+                    ? AppColors.accent.opacity(0.12)
+                    : AppColors.surface
                 )
                 .frame(width: 46, height: 46)
 
             if isCurrentTrack && radioPlayer.isFilePlaying {
                 Image(systemName: "waveform")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(AppColors.accent)
                     .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
             } else {
                 Image(systemName: "music.note")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(isCurrentTrack ? .accentColor : .secondary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textSecondary)
             }
         }
     }
-
-    // MARK: - Download Button
 
     @ViewBuilder
     private var downloadButton: some View {
@@ -171,19 +166,17 @@ struct TrackRow: View {
             Button(action: { downloadManager.download(track) }) {
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: 22))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColors.textSecondary)
             }
             .buttonStyle(.plain)
         }
     }
 
-    // MARK: - Play Button
-
     private var playButton: some View {
         Button(action: playTrack) {
             Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
                 .font(.system(size: 28))
-                .foregroundStyle(.accentColor)
+                .foregroundStyle(AppColors.accent)
                 .symbolRenderingMode(.hierarchical)
                 .contentTransition(.symbolEffect(.replace))
         }
@@ -208,11 +201,11 @@ struct CircularProgressView: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(.tertiary, lineWidth: 2.5)
+                .stroke(AppColors.textSecondary.opacity(0.2), lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    Color.accentColor,
+                    AppColors.accent,
                     style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))

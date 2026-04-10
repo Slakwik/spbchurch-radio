@@ -21,6 +21,7 @@
 		A10012 /* RadioPlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10012; };
 		A10013 /* TrackListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10013; };
 		A10014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10014; };
+		A10015 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10016; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		B10013 /* TrackListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackListViewModel.swift; sourceTree = "<group>"; };
 		B10014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B10016 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		B10099 /* SPBChurchRadio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPBChurchRadio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -91,6 +93,7 @@
 				B10004 /* TrackListView.swift */,
 				B10005 /* DownloadsView.swift */,
 				B10006 /* MiniPlayerBar.swift */,
+				B10016 /* Theme.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -205,6 +208,7 @@
 				A10011 /* FilePlayerService.swift in Sources */,
 				A10012 /* RadioPlayerViewModel.swift in Sources */,
 				A10013 /* TrackListViewModel.swift in Sources */,
+				A10015 /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

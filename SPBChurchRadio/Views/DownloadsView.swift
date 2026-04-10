@@ -12,7 +12,7 @@ struct DownloadsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground)
+                AppColors.background
                     .ignoresSafeArea()
 
                 if downloadedTracks.isEmpty {
@@ -22,6 +22,7 @@ struct DownloadsView: View {
                         ForEach(downloadedTracks) { track in
                             DownloadedTrackRow(track: track)
                                 .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                                .listRowBackground(Color.clear)
                         }
                         .onDelete { indexSet in
                             for index in indexSet {
@@ -35,6 +36,7 @@ struct DownloadsView: View {
             }
             .navigationTitle("Загрузки")
             .toolbarTitleDisplayMode(.large)
+            .tint(AppColors.accent)
         }
     }
 
@@ -42,21 +44,21 @@ struct DownloadsView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color(.tertiarySystemFill))
+                    .fill(AppColors.surface)
                     .frame(width: 80, height: 80)
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: 34, weight: .light))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
                     .symbolRenderingMode(.hierarchical)
             }
 
             Text("Нет загруженных треков")
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColors.textPrimary)
 
             Text("Загрузите треки во вкладке \"Треки\"\nдля офлайн-прослушивания")
                 .font(.system(size: 14, design: .rounded))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
     }
@@ -77,27 +79,27 @@ struct DownloadedTrackRow: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(
                         isCurrentTrack
-                        ? Color.accentColor.opacity(0.12)
-                        : Color(.tertiarySystemFill)
+                        ? AppColors.accent.opacity(0.12)
+                        : AppColors.surface
                     )
                     .frame(width: 46, height: 46)
 
                 if isCurrentTrack && radioPlayer.isFilePlaying {
                     Image(systemName: "waveform")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(.accentColor)
+                        .foregroundStyle(AppColors.accent)
                         .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
                 } else {
                     Image(systemName: "music.note")
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(isCurrentTrack ? .accentColor : .secondary)
+                        .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textSecondary)
                 }
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? Color.accentColor : .primary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textPrimary)
                     .lineLimit(2)
 
                 HStack(spacing: 3) {
@@ -106,7 +108,7 @@ struct DownloadedTrackRow: View {
                     Text("Сохранено на устройстве")
                         .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColors.textSecondary)
             }
 
             Spacer()
@@ -121,7 +123,7 @@ struct DownloadedTrackRow: View {
             }) {
                 Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(.accentColor)
+                    .foregroundStyle(AppColors.accent)
                     .symbolRenderingMode(.hierarchical)
                     .contentTransition(.symbolEffect(.replace))
             }
