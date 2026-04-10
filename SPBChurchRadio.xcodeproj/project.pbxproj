@@ -22,6 +22,9 @@
 		A10013 /* TrackListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10013; };
 		A10014 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B10014; };
 		A10015 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10016; };
+		A10017 /* ArtworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10017; };
+		A10018 /* ArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10018; };
+		A10019 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10019; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +44,9 @@
 		B10014 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B10015 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B10016 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B10017 /* ArtworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkService.swift; sourceTree = "<group>"; };
+		B10018 /* ArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkView.swift; sourceTree = "<group>"; };
+		B10019 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
 		B10099 /* SPBChurchRadio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPBChurchRadio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -94,6 +100,8 @@
 				B10005 /* DownloadsView.swift */,
 				B10006 /* MiniPlayerBar.swift */,
 				B10016 /* Theme.swift */,
+				B10018 /* ArtworkView.swift */,
+				B10019 /* NowPlayingView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -114,6 +122,7 @@
 				B10009 /* TrackListService.swift */,
 				B10010 /* DownloadManager.swift */,
 				B10011 /* FilePlayerService.swift */,
+				B10017 /* ArtworkService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -209,6 +218,9 @@
 				A10012 /* RadioPlayerViewModel.swift in Sources */,
 				A10013 /* TrackListViewModel.swift in Sources */,
 				A10015 /* Theme.swift in Sources */,
+				A10017 /* ArtworkService.swift in Sources */,
+				A10018 /* ArtworkView.swift in Sources */,
+				A10019 /* NowPlayingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

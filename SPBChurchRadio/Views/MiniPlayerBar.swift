@@ -3,6 +3,7 @@ import SwiftUI
 struct MiniPlayerBar: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @State private var showNowPlaying = false
 
     private var isIPad: Bool { hSizeClass == .regular }
 
@@ -28,35 +29,24 @@ struct MiniPlayerBar: View {
                 .padding(.horizontal, 14)
 
                 HStack(spacing: isIPad ? 14 : 10) {
-                    // Track icon
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(AppColors.accent.opacity(0.12))
-                            .frame(width: isIPad ? 42 : 36, height: isIPad ? 42 : 36)
-                        Image(systemName: "music.note")
-                            .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
-                            .foregroundStyle(AppColors.accent)
+                    // Artwork thumbnail — tap opens Now Playing
+                    Button(action: { showNowPlaying = true }) {
+                        ArtworkView(url: track.url, size: isIPad ? 42 : 36, cornerRadius: 8)
                     }
+                    .buttonStyle(.plain)
 
-                    // Title
-                    Text(track.title)
-                        .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(AppColors.textPrimary)
-                        .lineLimit(1)
-
-                    Spacer()
+                    // Title — tap opens Now Playing
+                    Button(action: { showNowPlaying = true }) {
+                        Text(track.title)
+                            .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(AppColors.textPrimary)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
 
                     // Controls
                     HStack(spacing: isIPad ? 16 : 10) {
-                        Button(action: {
-                            radioPlayer.filePlayer.shuffle.toggle()
-                        }) {
-                            Image(systemName: "shuffle")
-                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
-                                .foregroundStyle(radioPlayer.filePlayer.shuffle ? AppColors.accent : AppColors.textSecondary.opacity(0.4))
-                        }
-                        .buttonStyle(.plain)
-
                         Button(action: { radioPlayer.playPrevious() }) {
                             Image(systemName: "backward.fill")
                                 .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
@@ -106,6 +96,10 @@ struct MiniPlayerBar: View {
                             .stroke(AppColors.accent.opacity(0.1), lineWidth: 0.5)
                     )
             )
+            .fullScreenCover(isPresented: $showNowPlaying) {
+                NowPlayingView()
+                    .environmentObject(radioPlayer)
+            }
         }
     }
 }

@@ -85,23 +85,18 @@ struct DownloadedTrackRow: View {
     var body: some View {
         HStack(spacing: isIPad ? 18 : 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                    .fill(
-                        isCurrentTrack
-                        ? AppColors.accent.opacity(0.12)
-                        : AppColors.surface
-                    )
-                    .frame(width: isIPad ? 52 : 46, height: isIPad ? 52 : 46)
+                let thumbSize: CGFloat = isIPad ? 52 : 46
+                ArtworkView(url: track.url, size: thumbSize, cornerRadius: isIPad ? 12 : 10)
 
                 if isCurrentTrack && radioPlayer.isFilePlaying {
+                    let thumbSize: CGFloat = isIPad ? 52 : 46
+                    RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
+                        .fill(.black.opacity(0.4))
+                        .frame(width: thumbSize, height: thumbSize)
                     Image(systemName: "waveform")
                         .font(.system(size: isIPad ? 18 : 16, weight: .medium))
                         .foregroundStyle(AppColors.accent)
                         .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
-                } else {
-                    Image(systemName: "music.note")
-                        .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                        .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textSecondary)
                 }
             }
 

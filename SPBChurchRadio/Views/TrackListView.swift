@@ -124,23 +124,16 @@ struct TrackRow: View {
     private var trackThumbnail: some View {
         let thumbSize: CGFloat = isIPad ? 52 : 46
         return ZStack {
-            RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                .fill(
-                    isCurrentTrack
-                    ? AppColors.accent.opacity(0.12)
-                    : AppColors.surface
-                )
-                .frame(width: thumbSize, height: thumbSize)
+            ArtworkView(url: track.url, size: thumbSize, cornerRadius: isIPad ? 12 : 10)
 
             if isCurrentTrack && radioPlayer.isFilePlaying {
+                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
+                    .fill(.black.opacity(0.4))
+                    .frame(width: thumbSize, height: thumbSize)
                 Image(systemName: "waveform")
                     .font(.system(size: isIPad ? 18 : 16, weight: .medium))
                     .foregroundStyle(AppColors.accent)
                     .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
-            } else {
-                Image(systemName: "music.note")
-                    .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textSecondary)
             }
         }
     }

@@ -62,6 +62,7 @@ SPBChurchRadio/
 │   ├── RadioStreamService.swift          — стриминг радио, метаданные Icecast
 │   ├── FilePlayerService.swift           — воспроизведение MP3, shuffle
 │   ├── TrackListService.swift            — парсинг HTML-каталога треков
+│   ├── ArtworkService.swift              — извлечение обложек из ID3 тегов MP3
 │   └── DownloadManager.swift             — офлайн-кеширование файлов
 ├── ViewModels/
 │   ├── RadioPlayerViewModel.swift        — управление воспроизведением, next/prev
@@ -69,10 +70,12 @@ SPBChurchRadio/
 └── Views/
     ├── Theme.swift                       — цветовая палитра spbchurch.ru
     ├── ContentView.swift                 — TabView с мини-плеером
-    ├── RadioView.swift                   — экран радио (Liquid Glass орб)
-    ├── TrackListView.swift               — список треков с поиском
-    ├── DownloadsView.swift               — загруженные треки
-    └── MiniPlayerBar.swift               — плавающий мини-плеер
+    ├── RadioView.swift                   — экран радио с фоном дерева
+    ├── TrackListView.swift               — список треков с обложками
+    ├── DownloadsView.swift               — загруженные треки с обложками
+    ├── MiniPlayerBar.swift               — мини-плеер с обложкой
+    ├── NowPlayingView.swift              — полноэкранный плеер с круговым прогрессом
+    └── ArtworkView.swift                 — компонент отображения обложки
 ```
 
 ## Цветовая палитра
@@ -89,6 +92,15 @@ SPBChurchRadio/
 | Surface | `#faf8f5` | Карточки, иконки |
 
 ## История изменений
+
+### v2.0 — Обложки треков и экран Now Playing
+- Извлечение обложек из ID3 тегов MP3 файлов (AVFoundation)
+- Обложки отображаются в списке треков и загрузках
+- Полноэкранный Now Playing с большой обложкой и круговым прогрессом
+- Размытый фон обложки на экране Now Playing
+- Мини-плеер: обложка вместо иконки, tap открывает Now Playing
+- Кеширование обложек в памяти (NSCache, до 200 штук)
+- Адаптивный landscape-layout для Now Playing
 
 ### v1.9 — Исправление парсинга текущего трека
 - Парсер брал первый `streamstats` (дата старта потока) вместо трека
