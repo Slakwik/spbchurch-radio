@@ -101,11 +101,14 @@ class RadioStreamService: ObservableObject {
     }
 
     private func parseCurrentTrack(from html: String) -> String? {
-        // Look for the "Currently playing:" table cell followed by streamstats cell
-        guard let range = html.range(of: "class=\"streamstats\">") else { return nil }
-        let after = html[range.upperBound...]
-        guard let endRange = after.range(of: "</td>") else { return nil }
-        let title = String(after[..<endRange.lowerBound])
+        // Find "Currently playing:" then extract the next streamstats cell value
+        guard let cpRange = html.range(of: "Currently playing:") else { return nil }
+        let after = html[cpRange.upperBound...]
+        // Find the streamstats cell content after "Currently playing:"
+        guard let statsRange = after.range(of: "class=\"streamstats\">") else { return nil }
+        let valueStart = after[statsRange.upperBound...]
+        guard let endRange = valueStart.range(of: "</td>") else { return nil }
+        let title = String(valueStart[..<endRange.lowerBound])
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return title.isEmpty ? nil : title
     }
