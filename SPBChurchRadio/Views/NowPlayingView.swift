@@ -13,35 +13,34 @@ struct NowPlayingView: View {
 
     var body: some View {
         ZStack {
-            // Background: blurred artwork or dark gradient
             backgroundLayer
 
-            if isLandscape {
-                landscapeContent
-            } else {
-                portraitContent
+            VStack(spacing: 0) {
+                // Close button — always visible
+                header
+
+                if isLandscape {
+                    landscapeContent
+                } else {
+                    portraitContent
+                }
             }
         }
-        .ignoresSafeArea()
-        .statusBarHidden(false)
+        .background(Color(red: 0.06, green: 0.06, blue: 0.12))
     }
 
     // MARK: - Portrait
 
     private var portraitContent: some View {
         VStack(spacing: 0) {
-            // Drag handle & close
-            header
-                .padding(.top, 60)
-
-            Spacer(minLength: 16)
+            Spacer(minLength: 10)
 
             // Artwork with circular progress
             if let track = player.currentTrack {
                 circularArtwork(track: track, artSize: 260, ringSize: 300)
             }
 
-            Spacer(minLength: 20)
+            Spacer(minLength: 16)
 
             // Track info
             trackInfo
@@ -50,17 +49,17 @@ struct NowPlayingView: View {
             // Time
             timeRow
                 .padding(.horizontal, 30)
-                .padding(.top, 12)
+                .padding(.top, 14)
 
             // Controls
             controlButtons
                 .padding(.top, 20)
 
-            // Shuffle indicator
+            // Shuffle
             shuffleRow
                 .padding(.top, 16)
 
-            Spacer(minLength: 30)
+            Spacer(minLength: 20)
         }
     }
 
@@ -68,28 +67,30 @@ struct NowPlayingView: View {
 
     private var landscapeContent: some View {
         HStack(spacing: 24) {
+            Spacer()
+
             // Left: artwork
             if let track = player.currentTrack {
-                circularArtwork(track: track, artSize: 180, ringSize: 216)
-                    .padding(.leading, 40)
+                circularArtwork(track: track, artSize: 160, ringSize: 192)
             }
 
             // Right: info + controls
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 Spacer()
                 trackInfo
                 timeRow
+                    .frame(maxWidth: 280)
                 controlButtons
                 shuffleRow
                 Spacer()
             }
-            .frame(maxWidth: .infinity)
-            .padding(.trailing, 40)
+            .frame(maxWidth: 320)
+
+            Spacer()
         }
-        .padding(.top, 20)
     }
 
-    // MARK: - Components
+    // MARK: - Header (close button)
 
     private var header: some View {
         HStack {
@@ -98,25 +99,28 @@ struct NowPlayingView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.7))
                     .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
             Spacer()
             Text("Сейчас играет")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
             Spacer()
+            // Balance spacer
             Color.clear.frame(width: 44, height: 44)
         }
         .padding(.horizontal, 16)
+        .padding(.top, isLandscape ? 8 : 12)
     }
+
+    // MARK: - Circular Artwork
 
     private func circularArtwork(track: Track, artSize: CGFloat, ringSize: CGFloat) -> some View {
         ZStack {
-            // Background ring track
             Circle()
                 .stroke(.white.opacity(0.08), lineWidth: 4)
                 .frame(width: ringSize, height: ringSize)
 
-            // Progress ring
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
@@ -131,10 +135,11 @@ struct NowPlayingView: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.5), value: progress)
 
-            // Artwork
             ArtworkViewDark(url: track.url, size: artSize)
         }
     }
+
+    // MARK: - Track Info
 
     private var trackInfo: some View {
         VStack(spacing: 6) {
@@ -150,6 +155,8 @@ struct NowPlayingView: View {
         }
     }
 
+    // MARK: - Time Row
+
     private var timeRow: some View {
         HStack {
             Text(formatTime(player.currentTime))
@@ -162,12 +169,15 @@ struct NowPlayingView: View {
         }
     }
 
+    // MARK: - Controls
+
     private var controlButtons: some View {
         HStack(spacing: 36) {
             Button(action: { radioPlayer.playPrevious() }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(.white.opacity(0.8))
+                    .frame(width: 44, height: 44)
             }
 
             Button(action: { radioPlayer.toggleFilePause() }) {
@@ -189,9 +199,12 @@ struct NowPlayingView: View {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(.white.opacity(0.8))
+                    .frame(width: 44, height: 44)
             }
         }
     }
+
+    // MARK: - Shuffle
 
     private var shuffleRow: some View {
         Button(action: { player.shuffle.toggle() }) {
@@ -209,8 +222,6 @@ struct NowPlayingView: View {
 
     private var backgroundLayer: some View {
         ZStack {
-            Color(red: 0.06, green: 0.06, blue: 0.12)
-
             if let track = player.currentTrack,
                let img = ArtworkService.shared.cachedArtwork(for: track.url) {
                 Image(uiImage: img)
@@ -221,7 +232,6 @@ struct NowPlayingView: View {
                     .scaleEffect(1.3)
             }
 
-            // Dark overlay
             Color.black.opacity(0.45)
         }
         .ignoresSafeArea()
