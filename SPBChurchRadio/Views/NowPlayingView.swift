@@ -13,10 +13,9 @@ struct NowPlayingView: View {
 
     var body: some View {
         ZStack {
-            backgroundLayer
+            AppColors.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Close button — always visible
                 header
 
                 if isLandscape {
@@ -26,7 +25,6 @@ struct NowPlayingView: View {
                 }
             }
         }
-        .background(Color(red: 0.06, green: 0.06, blue: 0.12))
     }
 
     // MARK: - Portrait
@@ -35,31 +33,21 @@ struct NowPlayingView: View {
         VStack(spacing: 0) {
             Spacer(minLength: 10)
 
-            // Artwork with circular progress
+            // Dotted artwork ring with progress
             if let track = player.currentTrack {
-                circularArtwork(track: track, artSize: 260, ringSize: 300)
+                dottedProgressArtwork(track: track, artSize: 220, ringSize: 270)
             }
-
-            Spacer(minLength: 16)
 
             // Track info
             trackInfo
-                .padding(.horizontal, 30)
-
-            // Time
-            timeRow
-                .padding(.horizontal, 30)
-                .padding(.top, 14)
-
-            // Controls
-            controlButtons
                 .padding(.top, 20)
 
-            // Shuffle
-            shuffleRow
-                .padding(.top, 16)
+            Spacer(minLength: 16)
 
-            Spacer(minLength: 20)
+            // Bottom controls
+            bottomControls
+                .padding(.horizontal, 24)
+                .padding(.bottom, 20)
         }
     }
 
@@ -69,172 +57,217 @@ struct NowPlayingView: View {
         HStack(spacing: 24) {
             Spacer()
 
-            // Left: artwork
             if let track = player.currentTrack {
-                circularArtwork(track: track, artSize: 160, ringSize: 192)
+                dottedProgressArtwork(track: track, artSize: 140, ringSize: 175)
             }
 
-            // Right: info + controls
             VStack(spacing: 12) {
                 Spacer()
                 trackInfo
-                timeRow
-                    .frame(maxWidth: 280)
-                controlButtons
-                shuffleRow
+                bottomControls
+                    .frame(maxWidth: 320)
                 Spacer()
             }
-            .frame(maxWidth: 320)
 
             Spacer()
         }
     }
 
-    // MARK: - Header (close button)
+    // MARK: - Header
 
     private var header: some View {
         HStack {
+            Text("Музыка")
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(AppColors.textPrimary)
+
+            Spacer()
+
             Button(action: { dismiss() }) {
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.7))
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
-            Spacer()
-            Text("Сейчас играет")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.6))
-            Spacer()
-            // Balance spacer
-            Color.clear.frame(width: 44, height: 44)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 20)
         .padding(.top, isLandscape ? 8 : 12)
     }
 
-    // MARK: - Circular Artwork
+    // MARK: - Dotted Progress Artwork
 
-    private func circularArtwork(track: Track, artSize: CGFloat, ringSize: CGFloat) -> some View {
-        ZStack {
-            Circle()
-                .stroke(.white.opacity(0.08), lineWidth: 4)
-                .frame(width: ringSize, height: ringSize)
+    private func dottedProgressArtwork(track: Track, artSize: CGFloat, ringSize: CGFloat) -> some View {
+        let dotCount = 36
 
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    LinearGradient(
-                        colors: [AppColors.accent, AppColors.accentLight],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                )
-                .frame(width: ringSize, height: ringSize)
-                .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 0.5), value: progress)
+        return ZStack {
+            // Dotted ring — filled portion shows progress
+            ForEach(0..<dotCount, id: \.self) { i in
+                let angle = Double(i) / Double(dotCount) * 360.0
+                let normalizedPos = Double(i) / Double(dotCount)
+                let isFilled = normalizedPos <= progress
+                let dotSize: CGFloat = i % 4 == 0 ? 7 : 4.5
 
-            ArtworkViewDark(url: track.url, size: artSize)
+                Circle()
+                    .fill(isFilled ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.15))
+                    .frame(width: dotSize, height: dotSize)
+                    .offset(y: -ringSize / 2)
+                    .rotationEffect(.degrees(angle - 90))
+                    .animation(.linear(duration: 0.3), value: progress)
+            }
+
+            // Frosted artwork
+            ArtworkViewFrosted(url: track.url, size: artSize)
+                .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 20, x: 10, y: 10)
+                .shadow(color: AppColors.shadowLight, radius: 20, x: -10, y: -10)
         }
+        .frame(width: ringSize + 20, height: ringSize + 20)
     }
 
     // MARK: - Track Info
 
     private var trackInfo: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Text(player.currentTrack?.title ?? "")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(AppColors.textPrimary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
             Text("SPBChurch Radio")
                 .font(.system(size: 14, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.5))
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .padding(.horizontal, 30)
+    }
+
+    // MARK: - Bottom Controls
+
+    private var bottomControls: some View {
+        HStack(spacing: 14) {
+            // Speed widget
+            VStack(spacing: 12) {
+                // Shuffle toggle
+                Button(action: { player.shuffle.toggle() }) {
+                    VStack(spacing: 4) {
+                        Image(systemName: "shuffle")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(player.shuffle ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.4))
+                        Text(player.shuffle ? "Микс" : "x1")
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 65)
+                .neumorphicRaised(cornerRadius: 16)
+
+                // Time display
+                VStack(spacing: 2) {
+                    Text(formatTime(player.currentTime))
+                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text(formatTime(player.duration))
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 65)
+                .neumorphicRaised(cornerRadius: 16)
+            }
+            .frame(maxWidth: .infinity)
+
+            // Click wheel
+            clickWheel
         }
     }
 
-    // MARK: - Time Row
+    // MARK: - Click Wheel
 
-    private var timeRow: some View {
-        HStack {
-            Text(formatTime(player.currentTime))
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.5))
-            Spacer()
-            Text(formatTime(player.duration))
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundStyle(.white.opacity(0.5))
-        }
-    }
+    private var clickWheel: some View {
+        let wheelSize: CGFloat = 150
+        let centerSize: CGFloat = 52
 
-    // MARK: - Controls
+        return ZStack {
+            Circle()
+                .fill(AppColors.background)
+                .frame(width: wheelSize, height: wheelSize)
+                .shadow(color: AppColors.shadowDark, radius: 10, x: 6, y: 6)
+                .shadow(color: AppColors.shadowLight, radius: 10, x: -6, y: -6)
 
-    private var controlButtons: some View {
-        HStack(spacing: 36) {
+            // Menu dots (top)
+            VStack(spacing: 3) {
+                HStack(spacing: 3) {
+                    ForEach(0..<2, id: \.self) { _ in
+                        Circle().fill(AppColors.textPrimary.opacity(0.4))
+                            .frame(width: 4, height: 4)
+                    }
+                }
+                HStack(spacing: 3) {
+                    ForEach(0..<2, id: \.self) { _ in
+                        Circle().fill(AppColors.textPrimary.opacity(0.4))
+                            .frame(width: 4, height: 4)
+                    }
+                }
+            }
+            .offset(y: -wheelSize * 0.28)
+
+            // Rewind (left)
             Button(action: { radioPlayer.playPrevious() }) {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
                     .frame(width: 44, height: 44)
             }
+            .offset(x: -wheelSize * 0.28)
 
+            // Forward (right)
+            Button(action: { radioPlayer.playNext() }) {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
+                    .frame(width: 44, height: 44)
+            }
+            .offset(x: wheelSize * 0.28)
+
+            // Pause (bottom)
+            Image(systemName: "pause.fill")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(AppColors.textPrimary.opacity(0.4))
+                .offset(y: wheelSize * 0.28)
+
+            // Center button
             Button(action: { radioPlayer.toggleFilePause() }) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.accent)
-                        .frame(width: 64, height: 64)
-                        .shadow(color: AppColors.accent.opacity(0.3), radius: 12)
+                        .fill(AppColors.background)
+                        .frame(width: centerSize, height: centerSize)
+                        .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 4, x: 2, y: 2)
+                        .shadow(color: AppColors.shadowLight.opacity(0.8), radius: 4, x: -2, y: -2)
 
                     Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary)
                         .offset(x: radioPlayer.isFilePlaying ? 0 : 2)
                         .contentTransition(.symbolEffect(.replace))
                 }
             }
+            .buttonStyle(NeumorphicButtonStyle())
 
-            Button(action: { radioPlayer.playNext() }) {
-                Image(systemName: "forward.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .frame(width: 44, height: 44)
+            // Decorative dots
+            VStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { _ in
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Circle()
+                                .fill(AppColors.textSecondary.opacity(0.15))
+                                .frame(width: 3, height: 3)
+                        }
+                    }
+                }
             }
+            .offset(x: wheelSize * 0.42, y: wheelSize * 0.42)
         }
-    }
-
-    // MARK: - Shuffle
-
-    private var shuffleRow: some View {
-        Button(action: { player.shuffle.toggle() }) {
-            HStack(spacing: 6) {
-                Image(systemName: "shuffle")
-                    .font(.system(size: 13, weight: .semibold))
-                Text(player.shuffle ? "Перемешано" : "По порядку")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-            }
-            .foregroundStyle(player.shuffle ? AppColors.accent : .white.opacity(0.35))
-        }
-    }
-
-    // MARK: - Background
-
-    private var backgroundLayer: some View {
-        ZStack {
-            if let track = player.currentTrack,
-               let img = ArtworkService.shared.cachedArtwork(for: track.url) {
-                Image(uiImage: img)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .blur(radius: 60)
-                    .opacity(0.3)
-                    .scaleEffect(1.3)
-            }
-
-            Color.black.opacity(0.45)
-        }
-        .ignoresSafeArea()
     }
 
     // MARK: - Helpers

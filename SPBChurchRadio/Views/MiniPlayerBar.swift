@@ -17,10 +17,10 @@ struct MiniPlayerBar: View {
                         : 0
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(AppColors.textSecondary.opacity(0.15))
+                            .fill(AppColors.textSecondary.opacity(0.1))
                             .frame(height: 3)
                         Capsule()
-                            .fill(AppColors.accent)
+                            .fill(AppColors.textPrimary)
                             .frame(width: geo.size.width * progress, height: 3)
                             .animation(.linear(duration: 0.3), value: progress)
                     }
@@ -89,12 +89,9 @@ struct MiniPlayerBar: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .shadow(color: AppColors.primary.opacity(0.08), radius: 12, y: 4)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(AppColors.accent.opacity(0.1), lineWidth: 0.5)
-                    )
+                    .fill(AppColors.background)
+                    .shadow(color: AppColors.shadowDark, radius: 10, x: 4, y: 4)
+                    .shadow(color: AppColors.shadowLight, radius: 10, x: -4, y: -4)
             )
             .fullScreenCover(isPresented: $showNowPlaying) {
                 NowPlayingView()

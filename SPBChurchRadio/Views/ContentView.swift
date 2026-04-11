@@ -26,7 +26,7 @@ struct ContentView: View {
                     }
                     .tag(2)
             }
-            .tint(AppColors.accent)
+            .tint(AppColors.textPrimary)
 
             // Floating mini player
             if radioPlayer.activeMode == .file,

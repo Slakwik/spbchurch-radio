@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Displays album artwork from an MP3 URL, with fallback icon
+/// Displays album artwork from an MP3 URL, with fallback icon — neumorphic style
 struct ArtworkView: View {
     let url: URL
     let size: CGFloat
@@ -43,8 +43,8 @@ struct ArtworkView: View {
     }
 }
 
-/// Dark-themed artwork for Now Playing screen
-struct ArtworkViewDark: View {
+/// Circular frosted artwork for the neumorphic Now Playing style
+struct ArtworkViewFrosted: View {
     let url: URL
     let size: CGFloat
 
@@ -58,15 +58,32 @@ struct ArtworkViewDark: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .shadow(color: .black.opacity(0.4), radius: 20, y: 8)
+                    .clipShape(Circle())
+                    .blur(radius: 8)
+                    .overlay(
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: size * 0.7, height: size * 0.7)
+                            .clipShape(Circle())
+                    )
             } else {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.white.opacity(0.08))
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [
+                                    Color(red: 0.95, green: 0.95, blue: 0.97),
+                                    Color(red: 0.88, green: 0.88, blue: 0.92)
+                                ],
+                                center: .center,
+                                startRadius: 0,
+                                endRadius: size * 0.5
+                            )
+                        )
                     Image(systemName: "music.note")
-                        .font(.system(size: size * 0.3, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.3))
+                        .font(.system(size: size * 0.25, weight: .medium))
+                        .foregroundStyle(AppColors.textSecondary.opacity(0.3))
                 }
                 .frame(width: size, height: size)
             }
@@ -83,5 +100,18 @@ struct ArtworkViewDark: View {
                 }
             }
         }
+    }
+}
+
+/// Dark-themed artwork for legacy compatibility
+struct ArtworkViewDark: View {
+    let url: URL
+    let size: CGFloat
+
+    @State private var image: UIImage?
+    @State private var loaded = false
+
+    var body: some View {
+        ArtworkViewFrosted(url: url, size: size)
     }
 }

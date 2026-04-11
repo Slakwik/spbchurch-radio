@@ -11,36 +11,8 @@ struct RadioView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Dark base
-                Color(red: 0.03, green: 0.05, blue: 0.12).ignoresSafeArea()
+                AppColors.background.ignoresSafeArea()
 
-                // Tree background — static, no animation on image itself
-                Image("TreeBackground")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .ignoresSafeArea()
-                    .opacity(radioPlayer.isRadioPlaying ? 0.8 : 0.5)
-                    .animation(.easeInOut(duration: 1.0), value: radioPlayer.isRadioPlaying)
-
-                // Gradient overlays for text readability
-                VStack(spacing: 0) {
-                    LinearGradient(
-                        colors: [Color(red: 0.03, green: 0.05, blue: 0.12), .clear],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: isLandscape ? 50 : 100)
-                    Spacer()
-                    LinearGradient(
-                        colors: [.clear, Color(red: 0.03, green: 0.05, blue: 0.12).opacity(0.85)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: isLandscape ? 100 : 220)
-                }
-                .ignoresSafeArea()
-
-                // Content
                 if isLandscape {
                     landscapeLayout
                 } else {
@@ -54,29 +26,27 @@ struct RadioView: View {
     // MARK: - Portrait Layout
 
     private var portraitLayout: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
+            // Header
             stationHeader
-                .padding(.top, isIPad ? 30 : 16)
+                .padding(.top, isIPad ? 20 : 12)
 
             Spacer(minLength: 10)
 
-            // Now playing card
-            nowPlayingCard
-                .frame(maxWidth: isIPad ? 500 : .infinity)
-                .padding(.horizontal, isIPad ? 60 : 24)
+            // Artwork with dotted progress ring
+            dottedArtworkRing
+                .padding(.horizontal, 30)
 
-            // Play button
-            playButton
-                .padding(.top, 8)
+            // Track info
+            trackInfo
+                .padding(.top, 16)
 
-            // Live status
-            liveStatus
+            Spacer(minLength: 10)
 
-            // File player bar
-            filePlayerBar
-
-            Spacer(minLength: 0)
-                .frame(maxHeight: 20)
+            // Bottom controls grid
+            controlsGrid
+                .padding(.horizontal, 20)
+                .padding(.bottom, isIPad ? 30 : 16)
         }
         .padding(.horizontal)
     }
@@ -84,160 +54,281 @@ struct RadioView: View {
     // MARK: - Landscape Layout
 
     private var landscapeLayout: some View {
-        HStack(spacing: 0) {
-            // Left: station info
+        HStack(spacing: 20) {
+            // Left: artwork + info
             VStack(spacing: 12) {
                 Spacer()
-                stationHeader
+                dottedArtworkRing
+                    .frame(maxWidth: 200)
+                trackInfo
                 Spacer()
-                filePlayerBar
             }
             .frame(maxWidth: .infinity)
-            .padding(.leading, 20)
-            .padding(.bottom, 8)
 
             // Right: controls
             VStack(spacing: 14) {
                 Spacer()
-                nowPlayingCard
-                    .frame(maxWidth: isIPad ? 450 : 320)
-                playButton
-                liveStatus
+                stationHeader
+                controlsGrid
+                    .frame(maxWidth: 320)
                 Spacer()
             }
             .frame(maxWidth: .infinity)
-            .padding(.trailing, 20)
+            .padding(.trailing, 16)
         }
         .padding(.vertical, 8)
     }
 
-    // MARK: - Subviews
+    // MARK: - Station Header
 
     private var stationHeader: some View {
-        VStack(spacing: 4) {
-            Text("SPBChurch Radio")
-                .font(.system(size: isIPad ? 34 : 26, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-
-            Text("Церковь «Преображение»")
-                .font(.system(size: isIPad ? 16 : 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.45))
+        HStack {
+            Text("Радио")
+                .font(.system(size: isIPad ? 36 : 28, weight: .bold, design: .rounded))
+                .foregroundStyle(AppColors.textPrimary)
+            Spacer()
         }
+        .padding(.horizontal, 4)
     }
 
-    private var liveStatus: some View {
-        HStack(spacing: 6) {
-            if radioPlayer.isRadioPlaying {
+    // MARK: - Dotted Artwork Ring
+
+    private var dottedArtworkRing: some View {
+        let artSize: CGFloat = isIPad ? 280 : isLandscape ? 160 : 220
+        let ringSize: CGFloat = artSize + 50
+        let dotCount = 36
+        let isPlaying = radioPlayer.isRadioPlaying
+
+        return ZStack {
+            // Dotted ring
+            ForEach(0..<dotCount, id: \.self) { i in
+                let angle = Double(i) / Double(dotCount) * 360.0
+                let dotSize: CGFloat = i % 4 == 0 ? 6 : 4
+
                 Circle()
-                    .fill(AppColors.accent)
-                    .frame(width: 7, height: 7)
-                    .shadow(color: AppColors.accent.opacity(0.8), radius: 6)
-            }
-            Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "Нажмите для воспроизведения")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(.white.opacity(radioPlayer.isRadioPlaying ? 0.65 : 0.3))
-                .tracking(radioPlayer.isRadioPlaying ? 2.5 : 0)
-        }
-    }
-
-    @ViewBuilder
-    private var filePlayerBar: some View {
-        if radioPlayer.activeMode == .file,
-           let track = radioPlayer.filePlayer.currentTrack {
-            FileNowPlayingBar(track: track)
-                .frame(maxWidth: isIPad ? 500 : .infinity)
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
-        }
-    }
-
-    // MARK: - Now Playing Card
-
-    private var nowPlayingCard: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 6) {
-                Image(systemName: "music.note")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(AppColors.accent.opacity(0.7))
-                Text("СЕЙЧАС ИГРАЕТ")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppColors.accent.opacity(0.7))
-                    .tracking(1.5)
+                    .fill(AppColors.textPrimary.opacity(isPlaying ? 0.6 : 0.15))
+                    .frame(width: dotSize, height: dotSize)
+                    .offset(y: -ringSize / 2)
+                    .rotationEffect(.degrees(angle))
             }
 
-            Text(radioPlayer.currentRadioTrack)
-                .font(.system(size: isIPad ? 18 : 16, weight: .medium, design: .rounded))
-                .foregroundStyle(.white.opacity(0.9))
-                .multilineTextAlignment(.center)
-                .lineLimit(3)
-                .frame(maxWidth: .infinity)
-        }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 20)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.black.opacity(0.5))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppColors.accent.opacity(0.15), lineWidth: 0.5)
-                )
-        )
-    }
-
-    // MARK: - Play Button
-
-    private var playButton: some View {
-        let btnSize: CGFloat = isIPad ? 80 : 68
-        let outerSize: CGFloat = isIPad ? 100 : 84
-        let iconSize: CGFloat = isIPad ? 32 : 26
-
-        return Button(action: { radioPlayer.toggleRadio() }) {
+            // Frosted glass artwork circle
             ZStack {
-                // Glow
                 Circle()
                     .fill(
-                        .radialGradient(
+                        RadialGradient(
                             colors: [
-                                AppColors.accent.opacity(radioPlayer.isRadioPlaying ? 0.25 : 0.1),
-                                .clear
+                                Color.white.opacity(0.9),
+                                AppColors.background.opacity(0.6)
                             ],
                             center: .center,
-                            startRadius: btnSize * 0.36,
-                            endRadius: outerSize * 0.62
+                            startRadius: 0,
+                            endRadius: artSize * 0.5
                         )
                     )
-                    .frame(width: outerSize, height: outerSize)
+                    .frame(width: artSize, height: artSize)
 
-                // Button circle
-                Circle()
-                    .fill(.black.opacity(0.4))
-                    .frame(width: btnSize, height: btnSize)
-                    .overlay(
-                        Circle()
-                            .stroke(
-                                .linearGradient(
-                                    colors: [AppColors.accent.opacity(0.6), AppColors.accentLight.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ),
-                                lineWidth: 1.5
-                            )
-                    )
-                    .shadow(color: AppColors.accent.opacity(0.15), radius: 14)
-
-                // Icon
-                Image(systemName: radioPlayer.isRadioPlaying ? "stop.fill" : "play.fill")
-                    .font(.system(size: iconSize, weight: .medium))
-                    .foregroundStyle(AppColors.accent)
-                    .offset(x: radioPlayer.isRadioPlaying ? 0 : 2)
-                    .contentTransition(.symbolEffect(.replace))
+                // Tree image or icon
+                Image("TreeBackground")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: artSize * 0.7, height: artSize * 0.7)
+                    .clipShape(Circle())
+                    .blur(radius: 3)
+                    .opacity(isPlaying ? 0.7 : 0.4)
+                    .animation(.easeInOut(duration: 1.0), value: isPlaying)
             }
+            .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 20, x: 10, y: 10)
+            .shadow(color: AppColors.shadowLight, radius: 20, x: -10, y: -10)
         }
-        .buttonStyle(GlassButtonStyle())
+        .frame(width: ringSize, height: ringSize)
+    }
+
+    // MARK: - Track Info
+
+    private var trackInfo: some View {
+        VStack(spacing: 4) {
+            Text(radioPlayer.currentRadioTrack)
+                .font(.system(size: isIPad ? 20 : 17, weight: .bold, design: .rounded))
+                .foregroundStyle(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+
+            Text("SPBChurch Radio")
+                .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
+                .foregroundStyle(AppColors.textSecondary)
+        }
+    }
+
+    // MARK: - Controls Grid
+
+    private var controlsGrid: some View {
+        HStack(spacing: isIPad ? 18 : 14) {
+            // Left column
+            VStack(spacing: isIPad ? 18 : 14) {
+                // Live indicator
+                liveIndicatorWidget
+                // File player bar (if file playing)
+                filePlayerWidget
+            }
+            .frame(maxWidth: .infinity)
+
+            // iPod click wheel
+            clickWheel
+        }
+    }
+
+    // MARK: - Live Indicator Widget
+
+    private var liveIndicatorWidget: some View {
+        VStack(spacing: 6) {
+            if radioPlayer.isRadioPlaying {
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: .green.opacity(0.5), radius: 4)
+            }
+            Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "ОФЛАЙН")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(AppColors.textSecondary)
+                .tracking(1.5)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: isIPad ? 80 : 65)
+        .neumorphicRaised(cornerRadius: 16)
+    }
+
+    // MARK: - File Player Widget
+
+    @ViewBuilder
+    private var filePlayerWidget: some View {
+        if radioPlayer.activeMode == .file,
+           let track = radioPlayer.filePlayer.currentTrack {
+            VStack(spacing: 4) {
+                Image(systemName: "music.note")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                Text(track.title)
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: isIPad ? 80 : 65)
+            .neumorphicRaised(cornerRadius: 16)
+        } else {
+            VStack(spacing: 4) {
+                Image(systemName: "headphones")
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: isIPad ? 80 : 65)
+            .neumorphicRaised(cornerRadius: 16)
+        }
+    }
+
+    // MARK: - iPod Click Wheel
+
+    private var clickWheel: some View {
+        let wheelSize: CGFloat = isIPad ? 180 : 150
+        let centerSize: CGFloat = isIPad ? 64 : 52
+
+        return ZStack {
+            // Wheel background
+            Circle()
+                .fill(AppColors.background)
+                .frame(width: wheelSize, height: wheelSize)
+                .shadow(color: AppColors.shadowDark, radius: 10, x: 6, y: 6)
+                .shadow(color: AppColors.shadowLight, radius: 10, x: -6, y: -6)
+
+            // Menu dots (top)
+            Button(action: {}) {
+                VStack(spacing: 3) {
+                    HStack(spacing: 3) {
+                        ForEach(0..<2, id: \.self) { _ in
+                            Circle().fill(AppColors.textPrimary.opacity(0.4))
+                                .frame(width: 4, height: 4)
+                        }
+                    }
+                    HStack(spacing: 3) {
+                        ForEach(0..<2, id: \.self) { _ in
+                            Circle().fill(AppColors.textPrimary.opacity(0.4))
+                                .frame(width: 4, height: 4)
+                        }
+                    }
+                }
+            }
+            .offset(y: -wheelSize * 0.28)
+
+            // Rewind (left)
+            Button(action: { radioPlayer.playPrevious() }) {
+                Image(systemName: "backward.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
+            }
+            .offset(x: -wheelSize * 0.28)
+
+            // Forward (right)
+            Button(action: { radioPlayer.playNext() }) {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
+            }
+            .offset(x: wheelSize * 0.28)
+
+            // Pause indicator (bottom)
+            Image(systemName: "pause.fill")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(AppColors.textPrimary.opacity(0.4))
+                .offset(y: wheelSize * 0.28)
+
+            // Center play/stop button
+            Button(action: { radioPlayer.toggleRadio() }) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.background)
+                        .frame(width: centerSize, height: centerSize)
+                        .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 4, x: 2, y: 2)
+                        .shadow(color: AppColors.shadowLight.opacity(0.8), radius: 4, x: -2, y: -2)
+
+                    Image(systemName: radioPlayer.isRadioPlaying ? "stop.fill" : "play.fill")
+                        .font(.system(size: isIPad ? 22 : 18, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .offset(x: radioPlayer.isRadioPlaying ? 0 : 2)
+                        .contentTransition(.symbolEffect(.replace))
+                }
+            }
+            .buttonStyle(NeumorphicButtonStyle())
+
+            // Decorative dots (bottom right of wheel)
+            VStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Circle()
+                                .fill(AppColors.textSecondary.opacity(0.15))
+                                .frame(width: 3, height: 3)
+                        }
+                    }
+                }
+            }
+            .offset(x: wheelSize * 0.42, y: wheelSize * 0.42)
+        }
     }
 }
 
-// MARK: - Glass Button Style
+// MARK: - Neumorphic Button Style
+
+struct NeumorphicButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
+// MARK: - Glass Button Style (compatibility)
 
 struct GlassButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -248,7 +339,7 @@ struct GlassButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - File Now Playing Bar
+// MARK: - File Now Playing Bar (neumorphic)
 
 struct FileNowPlayingBar: View {
     let track: Track
@@ -256,18 +347,13 @@ struct FileNowPlayingBar: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(AppColors.accent.opacity(0.15))
-                    .frame(width: 32, height: 32)
-                Image(systemName: "music.note")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(AppColors.accent)
-            }
+            Image(systemName: "music.note")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(AppColors.textSecondary)
 
             Text(track.title)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundColor(.white.opacity(0.85))
+                .foregroundColor(AppColors.textPrimary)
                 .lineLimit(1)
 
             Spacer()
@@ -275,36 +361,29 @@ struct FileNowPlayingBar: View {
             Button(action: { radioPlayer.filePlayer.shuffle.toggle() }) {
                 Image(systemName: "shuffle")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.accent : .white.opacity(0.3))
+                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.3))
             }
 
             Button(action: { radioPlayer.playPrevious() }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(AppColors.textPrimary.opacity(0.6))
             }
 
             Button(action: { radioPlayer.toggleFilePause() }) {
                 Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.textPrimary)
             }
 
             Button(action: { radioPlayer.playNext() }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundColor(AppColors.textPrimary.opacity(0.6))
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.black.opacity(0.5))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(AppColors.accent.opacity(0.15), lineWidth: 0.5)
-                )
-        )
+        .neumorphicRaised(cornerRadius: 14)
     }
 }

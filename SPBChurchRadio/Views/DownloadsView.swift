@@ -42,7 +42,7 @@ struct DownloadsView: View {
             }
             .navigationTitle("Загрузки")
             .toolbarTitleDisplayMode(.large)
-            .tint(AppColors.accent)
+            .tint(AppColors.textPrimary)
         }
     }
 
@@ -50,8 +50,11 @@ struct DownloadsView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(AppColors.surface)
+                    .fill(AppColors.background)
                     .frame(width: 80, height: 80)
+                    .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 6, x: 4, y: 4)
+                    .shadow(color: AppColors.shadowLight, radius: 6, x: -4, y: -4)
+
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: 34, weight: .light))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
@@ -87,15 +90,17 @@ struct DownloadedTrackRow: View {
             ZStack {
                 let thumbSize: CGFloat = isIPad ? 52 : 46
                 ArtworkView(url: track.url, size: thumbSize, cornerRadius: isIPad ? 12 : 10)
+                    .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 4, x: 2, y: 2)
+                    .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 4, x: -2, y: -2)
 
                 if isCurrentTrack && radioPlayer.isFilePlaying {
                     let thumbSize: CGFloat = isIPad ? 52 : 46
                     RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                        .fill(.black.opacity(0.4))
+                        .fill(AppColors.background.opacity(0.6))
                         .frame(width: thumbSize, height: thumbSize)
                     Image(systemName: "waveform")
                         .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                        .foregroundStyle(AppColors.accent)
+                        .foregroundStyle(AppColors.textPrimary)
                         .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
                 }
             }
@@ -103,7 +108,7 @@ struct DownloadedTrackRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textPrimary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.textPrimary : AppColors.textPrimary.opacity(0.8))
                     .lineLimit(2)
 
                 HStack(spacing: 3) {
@@ -125,13 +130,21 @@ struct DownloadedTrackRow: View {
                     radioPlayer.playFile(track, localURL: localURL)
                 }
             }) {
-                Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.system(size: isIPad ? 34 : 28))
-                    .foregroundStyle(AppColors.accent)
-                    .symbolRenderingMode(.hierarchical)
-                    .contentTransition(.symbolEffect(.replace))
+                ZStack {
+                    Circle()
+                        .fill(AppColors.background)
+                        .frame(width: isIPad ? 38 : 32, height: isIPad ? 38 : 32)
+                        .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 3, x: 2, y: 2)
+                        .shadow(color: AppColors.shadowLight.opacity(0.6), radius: 3, x: -2, y: -2)
+
+                    Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: isIPad ? 14 : 12, weight: .semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .offset(x: isCurrentTrack && radioPlayer.isFilePlaying ? 0 : 1)
+                        .contentTransition(.symbolEffect(.replace))
+                }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(NeumorphicButtonStyle())
         }
         .padding(.vertical, isIPad ? 6 : 4)
     }

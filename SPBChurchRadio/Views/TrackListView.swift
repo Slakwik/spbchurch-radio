@@ -16,7 +16,7 @@ struct TrackListView: View {
                     VStack(spacing: 20) {
                         ProgressView()
                             .controlSize(.large)
-                            .tint(AppColors.accent)
+                            .tint(AppColors.textSecondary)
                         Text("Загрузка треков...")
                             .font(.system(size: 15, weight: .medium, design: .rounded))
                             .foregroundStyle(AppColors.textSecondary)
@@ -37,7 +37,7 @@ struct TrackListView: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 24)
                                 .padding(.vertical, 10)
-                                .background(AppColors.accent, in: Capsule())
+                                .background(AppColors.textPrimary, in: Capsule())
                         }
                     }
                     .padding()
@@ -64,7 +64,7 @@ struct TrackListView: View {
             .navigationTitle("Треки")
             .toolbarTitleDisplayMode(.large)
             .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
-            .tint(AppColors.accent)
+            .tint(AppColors.textPrimary)
             .onAppear {
                 trackListVM.loadTracks()
             }
@@ -97,7 +97,7 @@ struct TrackRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? AppColors.accent : AppColors.textPrimary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.textPrimary : AppColors.textPrimary.opacity(0.8))
                     .lineLimit(2)
 
                 if isDownloaded {
@@ -107,7 +107,7 @@ struct TrackRow: View {
                         Text("Загружено")
                             .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColors.textSecondary)
                 }
             }
 
@@ -125,14 +125,16 @@ struct TrackRow: View {
         let thumbSize: CGFloat = isIPad ? 52 : 46
         return ZStack {
             ArtworkView(url: track.url, size: thumbSize, cornerRadius: isIPad ? 12 : 10)
+                .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 4, x: 2, y: 2)
+                .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 4, x: -2, y: -2)
 
             if isCurrentTrack && radioPlayer.isFilePlaying {
                 RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                    .fill(.black.opacity(0.4))
+                    .fill(AppColors.background.opacity(0.6))
                     .frame(width: thumbSize, height: thumbSize)
                 Image(systemName: "waveform")
                     .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                    .foregroundStyle(AppColors.accent)
+                    .foregroundStyle(AppColors.textPrimary)
                     .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
             }
         }
@@ -144,7 +146,7 @@ struct TrackRow: View {
         if isDownloaded {
             Image(systemName: "arrow.down.circle.fill")
                 .font(.system(size: iconSize))
-                .foregroundStyle(.green)
+                .foregroundStyle(AppColors.textSecondary)
                 .symbolRenderingMode(.hierarchical)
         } else if let state = downloadManager.downloads[track.url] {
             switch state {
@@ -155,7 +157,7 @@ struct TrackRow: View {
             case .completed:
                 Image(systemName: "arrow.down.circle.fill")
                     .font(.system(size: iconSize))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(AppColors.textSecondary)
                     .symbolRenderingMode(.hierarchical)
             case .failed:
                 Button(action: { downloadManager.download(track) }) {
@@ -178,13 +180,21 @@ struct TrackRow: View {
 
     private var playButton: some View {
         Button(action: playTrack) {
-            Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.circle.fill" : "play.circle.fill")
-                .font(.system(size: isIPad ? 34 : 28))
-                .foregroundStyle(AppColors.accent)
-                .symbolRenderingMode(.hierarchical)
-                .contentTransition(.symbolEffect(.replace))
+            ZStack {
+                Circle()
+                    .fill(AppColors.background)
+                    .frame(width: isIPad ? 38 : 32, height: isIPad ? 38 : 32)
+                    .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 3, x: 2, y: 2)
+                    .shadow(color: AppColors.shadowLight.opacity(0.6), radius: 3, x: -2, y: -2)
+
+                Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
+                    .font(.system(size: isIPad ? 14 : 12, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .offset(x: isCurrentTrack && radioPlayer.isFilePlaying ? 0 : 1)
+                    .contentTransition(.symbolEffect(.replace))
+            }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(NeumorphicButtonStyle())
     }
 
     private func playTrack() {
@@ -205,11 +215,11 @@ struct CircularProgressView: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(AppColors.textSecondary.opacity(0.2), lineWidth: 2.5)
+                .stroke(AppColors.textSecondary.opacity(0.15), lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    AppColors.accent,
+                    AppColors.textPrimary,
                     style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
