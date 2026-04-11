@@ -29,7 +29,7 @@ class ArtworkService: ObservableObject {
 
         Task.detached(priority: .utility) { [weak self] in
             let image = await self?.extractArtwork(from: url)
-            await MainActor.run {
+            await MainActor.run { [weak self] in
                 self?.loadingURLs.remove(url)
                 if let image = image {
                     self?.cache.setObject(image, forKey: url as NSURL)
