@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @State private var showAbout = false
+    @State private var showHelp = false
 
     private var isIPad: Bool { hSizeClass == .regular }
 
@@ -18,6 +19,10 @@ struct SettingsView: View {
                         // MARK: - Theme Section
                         settingsSectionHeader("Оформление")
                         themeSection
+
+                        // MARK: - Help Section
+                        settingsSectionHeader("Помощь")
+                        helpSection
 
                         // MARK: - Links Section
                         settingsSectionHeader("Ссылки")
@@ -38,7 +43,53 @@ struct SettingsView: View {
             .fullScreenCover(isPresented: $showAbout) {
                 AboutAppView()
             }
+            .fullScreenCover(isPresented: $showHelp) {
+                HelpView()
+            }
         }
+    }
+
+    // MARK: - Help Section
+
+    private var helpSection: some View {
+        Button(action: {
+            HapticManager.lightImpact()
+            showHelp = true
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.background)
+                        .frame(width: isIPad ? 44 : 38, height: isIPad ? 44 : 38)
+                        .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 3, x: 2, y: 2)
+                        .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 3, x: -2, y: -2)
+
+                    Image(systemName: "questionmark.circle.fill")
+                        .font(.system(size: isIPad ? 18 : 15, weight: .medium))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Руководство пользователя")
+                        .font(.system(size: isIPad ? 17 : 15, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text("Описание функций и подсказки")
+                        .font(.system(size: isIPad ? 13 : 12, weight: .regular))
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.4))
+            }
+            .padding(.horizontal, isIPad ? 20 : 16)
+            .padding(.vertical, isIPad ? 14 : 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .neumorphicRaised(cornerRadius: 16)
     }
 
     // MARK: - Section Header
@@ -202,7 +253,7 @@ struct SettingsView: View {
                     Text("SPBChurch Radio")
                         .font(.system(size: isIPad ? 17 : 15, weight: .semibold))
                         .foregroundStyle(AppColors.textPrimary)
-                    Text("Версия 3.1")
+                    Text("Версия 3.8")
                         .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
@@ -329,7 +380,7 @@ private struct AboutAppView: View {
                 .font(.system(size: isIPad ? 24 : 20, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("Версия 3.1")
+            Text("Версия 3.8")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
@@ -341,12 +392,12 @@ private struct AboutAppView: View {
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(AppColors.accentAdaptive)
 
-            Text("SPBChurch Radio — это официальное мобильное приложение интернет-радиостанции церкви евангельских христиан-баптистов «Преображение» города Санкт-Петербурга. Приложение создано для удобного прослушивания радиопотока и каталога духовной музыки в любое время и в любом месте.")
+            Text("SPBChurch Radio — мобильное приложение для прослушивания христианского интернет-радио: псалмы, духовные песни и прямой эфир в любое время и в любом месте.")
                 .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
-            Text("Слушайте прямой эфир радиостанции с отображением текущего трека в реальном времени, просматривайте каталог из более чем 2000 аудиозаписей, создавайте собственные плейлисты с помощью функции случайного воспроизведения и загружайте любимые треки для офлайн-прослушивания — всё это доступно без регистрации и подписок.")
+            Text("Слушайте прямой эфир с отображением текущего трека в реальном времени, просматривайте каталог из более чем 2000 аудиозаписей, создавайте собственные плейлисты с помощью функции случайного воспроизведения, добавляйте треки в избранное и загружайте любимые песни для офлайн-прослушивания — всё это доступно без регистрации и подписок.")
                 .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
@@ -399,7 +450,7 @@ private struct AboutAppView: View {
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(AppColors.accentAdaptive)
 
-            Text("Приложение разработано для церкви ЕХБ «Преображение» (Санкт-Петербург) с любовью и вниманием к деталям. Дизайн вдохновлён neumorphic стилем и стремлением создать тёплое, уютное пространство для прослушивания духовной музыки.")
+            Text("Приложение создано христианами, которые неравнодушны к псалмам и духовным песням, — с любовью к музыке, вниманием к деталям и желанием поделиться ею с ближними.")
                 .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
@@ -422,4 +473,150 @@ private struct AboutAppView: View {
         .padding(isIPad ? 24 : 18)
         .neumorphicRaised(cornerRadius: 16)
     }
+}
+
+// MARK: - Help View (Full Screen)
+
+private struct HelpView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isIPad: Bool { hSizeClass == .regular }
+
+    var body: some View {
+        ZStack {
+            AppColors.background.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Помощь")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(AppColors.textPrimary)
+
+                    Spacer()
+
+                    Button(action: {
+                        HapticManager.lightImpact()
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                            .symbolRenderingMode(.hierarchical)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+
+                ScrollView {
+                    VStack(spacing: isIPad ? 20 : 16) {
+                        helpSection(
+                            title: "Радио",
+                            icon: "antenna.radiowaves.left.and.right",
+                            items: [
+                                HelpItem(icon: "play.fill", text: "Нажмите центральную кнопку iPod-колеса, чтобы запустить прямой эфир."),
+                                HelpItem(icon: "waveform", text: "Пока идёт эфир, под обложкой отображается название текущего трека и анимированный эквалайзер."),
+                                HelpItem(icon: "magnifyingglass", text: "Кнопка «Найти в библиотеке» ищет играющий трек в каталоге по очищенному названию."),
+                                HelpItem(icon: "chevron.up", text: "Виджет текущего файла открывает полноэкранный плеер при нажатии.")
+                            ]
+                        )
+
+                        helpSection(
+                            title: "Треки",
+                            icon: "music.note.list",
+                            items: [
+                                HelpItem(icon: "magnifyingglass", text: "Поиск фильтрует каталог по названию в реальном времени."),
+                                HelpItem(icon: "arrow.up.arrow.down.circle", text: "Меню сортировки в правом углу: по умолчанию, А–Я, Я–А. Выбор сохраняется."),
+                                HelpItem(icon: "arrow.down.circle", text: "Нажмите на стрелку, чтобы загрузить трек для офлайн-прослушивания."),
+                                HelpItem(icon: "play.circle", text: "Нажмите круглую кнопку play, чтобы начать воспроизведение.")
+                            ]
+                        )
+
+                        helpSection(
+                            title: "Избранное",
+                            icon: "heart.fill",
+                            items: [
+                                HelpItem(icon: "heart", text: "Добавляйте треки в избранное через кнопку ♡ на экране плеера."),
+                                HelpItem(icon: "arrow.up.arrow.down", text: "В режиме редактирования можно менять порядок и удалять свайпом."),
+                                HelpItem(icon: "tray.full", text: "Список хранится локально и не зависит от интернета.")
+                            ]
+                        )
+
+                        helpSection(
+                            title: "Загрузки",
+                            icon: "arrow.down.circle.fill",
+                            items: [
+                                HelpItem(icon: "wifi.slash", text: "Загруженные треки доступны без интернета и сохраняются между запусками."),
+                                HelpItem(icon: "trash", text: "Удалить трек с устройства — кнопка корзины в строке или свайп."),
+                                HelpItem(icon: "internaldrive", text: "Каждый трек хранится по хэшу URL — дубликаты исключены.")
+                            ]
+                        )
+
+                        helpSection(
+                            title: "Плеер",
+                            icon: "play.circle.fill",
+                            items: [
+                                HelpItem(icon: "heart", text: "♡ добавляет текущий трек в избранное."),
+                                HelpItem(icon: "arrow.down.circle", text: "Стрелка вниз скачивает трек в офлайн; зелёная галочка — уже загружен."),
+                                HelpItem(icon: "shuffle", text: "Переключение между «Микс» (случайный порядок) и «По порядку»."),
+                                HelpItem(icon: "backward.fill", text: "Прокрутка вперёд/назад через iPod-колесо."),
+                                HelpItem(icon: "slider.horizontal.below.rectangle", text: "Слайдер прогресса можно тянуть для перемотки трека.")
+                            ]
+                        )
+
+                        helpSection(
+                            title: "Фон и управление",
+                            icon: "speaker.wave.2.fill",
+                            items: [
+                                HelpItem(icon: "lock.fill", text: "Приложение продолжает играть при блокировке экрана."),
+                                HelpItem(icon: "applewatch", text: "Управление с Lock Screen, Control Center и совместимых наушников."),
+                                HelpItem(icon: "moon.fill", text: "Поддерживаются светлая и тёмная темы — меняются в «Настройках»."),
+                                HelpItem(icon: "ipad.and.iphone", text: "Адаптивный макет для iPhone и iPad во всех ориентациях.")
+                            ]
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 40)
+                }
+            }
+        }
+    }
+
+    private func helpSection(title: String, icon: String, items: [HelpItem]) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Label(title, systemImage: icon)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(AppColors.accentAdaptive)
+
+            ForEach(items) { item in
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: item.icon)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                        .frame(width: 24)
+                        .padding(.top, 1)
+
+                    Text(item.text)
+                        .font(.system(size: isIPad ? 15 : 13, weight: .regular))
+                        .foregroundStyle(AppColors.textPrimary.opacity(0.85))
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .padding(isIPad ? 24 : 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .neumorphicRaised(cornerRadius: 16)
+    }
+}
+
+private struct HelpItem: Identifiable {
+    let id = UUID()
+    let icon: String
+    let text: String
 }
