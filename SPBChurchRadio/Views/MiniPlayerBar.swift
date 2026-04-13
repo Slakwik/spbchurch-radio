@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MiniPlayerBar: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @State private var showNowPlaying = false
@@ -136,6 +137,7 @@ struct MiniPlayerBar: View {
             .fullScreenCover(isPresented: $showNowPlaying) {
                 NowPlayingView()
                     .environmentObject(radioPlayer)
+                    .environmentObject(favoritesManager)
             }
         }
     }

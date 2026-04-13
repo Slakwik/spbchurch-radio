@@ -4,6 +4,7 @@ struct RadioView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var navigator: AppNavigator
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -27,6 +28,7 @@ struct RadioView: View {
             .fullScreenCover(isPresented: $showNowPlaying) {
                 NowPlayingView()
                     .environmentObject(radioPlayer)
+                    .environmentObject(favoritesManager)
             }
         }
     }
