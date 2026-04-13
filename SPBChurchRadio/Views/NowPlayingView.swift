@@ -4,6 +4,7 @@ struct NowPlayingView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.verticalSizeClass) private var vSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var isLandscape: Bool { vSizeClass == .compact }
     private var player: FilePlayerService { radioPlayer.filePlayer }
@@ -14,6 +15,11 @@ struct NowPlayingView: View {
     var body: some View {
         ZStack {
             AppColors.background.ignoresSafeArea()
+
+            // Blurred album art background
+            if let track = player.currentTrack {
+                ArtworkViewBlurredBackground(url: track.url)
+            }
 
             VStack(spacing: 0) {
                 header
@@ -42,6 +48,11 @@ struct NowPlayingView: View {
             trackInfo
                 .padding(.top, 20)
 
+            // Seek slider
+            seekSlider
+                .padding(.horizontal, 36)
+                .padding(.top, 16)
+
             Spacer(minLength: 16)
 
             // Bottom controls
@@ -64,6 +75,8 @@ struct NowPlayingView: View {
             VStack(spacing: 12) {
                 Spacer()
                 trackInfo
+                seekSlider
+                    .frame(maxWidth: 320)
                 bottomControls
                     .frame(maxWidth: 320)
                 Spacer()
@@ -83,7 +96,13 @@ struct NowPlayingView: View {
 
             Spacer()
 
-            Button(action: { dismiss() }) {
+            // Mini equalizer in header
+            MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
+
+            Button(action: {
+                HapticManager.lightImpact()
+                dismiss()
+            }) {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary)
@@ -101,7 +120,7 @@ struct NowPlayingView: View {
         let dotCount = 36
 
         return ZStack {
-            // Dotted ring — filled portion shows progress
+            // Dotted ring — filled portion shows progress with accent color
             ForEach(0..<dotCount, id: \.self) { i in
                 let angle = Double(i) / Double(dotCount) * 360.0
                 let normalizedPos = Double(i) / Double(dotCount)
@@ -109,7 +128,11 @@ struct NowPlayingView: View {
                 let dotSize: CGFloat = i % 4 == 0 ? 7 : 4.5
 
                 Circle()
-                    .fill(isFilled ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.15))
+                    .fill(
+                        isFilled
+                        ? AppColors.accentAdaptive
+                        : AppColors.textSecondary.opacity(0.15)
+                    )
                     .frame(width: dotSize, height: dotSize)
                     .offset(y: -ringSize / 2)
                     .rotationEffect(.degrees(angle - 90))
@@ -141,6 +164,49 @@ struct NowPlayingView: View {
         .padding(.horizontal, 30)
     }
 
+    // MARK: - Seek Slider
+
+    private var seekSlider: some View {
+        VStack(spacing: 6) {
+            // Slider
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    // Background track
+                    Capsule()
+                        .fill(AppColors.textSecondary.opacity(0.15))
+                        .frame(height: 4)
+
+                    // Filled track
+                    Capsule()
+                        .fill(AppGradients.accentGradient)
+                        .frame(width: max(0, geo.size.width * progress), height: 4)
+                }
+            }
+            .frame(height: 4)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let newProgress = max(0, min(1, value.location.x / (UIScreen.main.bounds.width - 72)))
+                        let newTime = newProgress * player.duration
+                        player.seek(to: newTime)
+                    }
+            )
+
+            // Time labels
+            HStack {
+                Text(formatTime(player.currentTime))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Spacer()
+
+                Text(formatTime(player.duration))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+        }
+    }
+
     // MARK: - Bottom Controls
 
     private var bottomControls: some View {
@@ -148,11 +214,14 @@ struct NowPlayingView: View {
             // Speed widget
             VStack(spacing: 12) {
                 // Shuffle toggle
-                Button(action: { player.shuffle.toggle() }) {
+                Button(action: {
+                    HapticManager.selection()
+                    player.shuffle.toggle()
+                }) {
                     VStack(spacing: 4) {
                         Image(systemName: "shuffle")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(player.shuffle ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.4))
+                            .foregroundStyle(player.shuffle ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.4))
                         Text(player.shuffle ? "Микс" : "x1")
                             .font(.system(size: 10, weight: .bold, design: .rounded))
                             .foregroundStyle(AppColors.textSecondary)
@@ -213,7 +282,10 @@ struct NowPlayingView: View {
             .offset(y: -wheelSize * 0.28)
 
             // Rewind (left)
-            Button(action: { radioPlayer.playPrevious() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playPrevious()
+            }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary.opacity(0.5))
@@ -222,7 +294,10 @@ struct NowPlayingView: View {
             .offset(x: -wheelSize * 0.28)
 
             // Forward (right)
-            Button(action: { radioPlayer.playNext() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playNext()
+            }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary.opacity(0.5))
@@ -237,7 +312,10 @@ struct NowPlayingView: View {
                 .offset(y: wheelSize * 0.28)
 
             // Center button
-            Button(action: { radioPlayer.toggleFilePause() }) {
+            Button(action: {
+                HapticManager.mediumImpact()
+                radioPlayer.toggleFilePause()
+            }) {
                 ZStack {
                     Circle()
                         .fill(AppColors.background)
@@ -247,7 +325,7 @@ struct NowPlayingView: View {
 
                     Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(AppColors.textPrimary)
+                        .foregroundStyle(radioPlayer.isFilePlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
                         .offset(x: radioPlayer.isFilePlaying ? 0 : 2)
                         .contentTransition(.symbolEffect(.replace))
                 }
@@ -277,5 +355,41 @@ struct NowPlayingView: View {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
         return "\(mins):\(String(format: "%02d", secs))"
+    }
+}
+
+// MARK: - Blurred Background Artwork
+
+private struct ArtworkViewBlurredBackground: View {
+    let url: URL
+    @State private var image: UIImage?
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        Group {
+            if let image = image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .blur(radius: 40)
+                    .overlay(
+                        colorScheme == .dark
+                        ? Color.black.opacity(0.7)
+                        : AppColors.background.opacity(0.75)
+                    )
+                    .ignoresSafeArea()
+            }
+        }
+        .onAppear {
+            if let cached = ArtworkService.shared.cachedArtwork(for: url) {
+                image = cached
+            } else {
+                ArtworkService.shared.artwork(for: url) { img in
+                    image = img
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.5), value: image != nil)
     }
 }

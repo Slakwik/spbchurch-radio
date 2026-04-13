@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
     @State private var selectedTab = 0
 
     var body: some View {
@@ -26,7 +27,7 @@ struct ContentView: View {
                     }
                     .tag(2)
             }
-            .tint(AppColors.textPrimary)
+            .tint(AppColors.accentAdaptive)
 
             // Floating mini player
             if radioPlayer.activeMode == .file,
@@ -40,5 +41,24 @@ struct ContentView: View {
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.85), value: radioPlayer.activeMode)
+        .onAppear {
+            // Custom tab bar appearance
+            let appearance = UITabBarAppearance()
+            appearance.configureWithOpaqueBackground()
+
+            if colorScheme == .dark {
+                appearance.backgroundColor = UIColor(red: 0.11, green: 0.11, blue: 0.14, alpha: 1.0)
+            } else {
+                appearance.backgroundColor = UIColor(red: 0.941, green: 0.941, blue: 0.953, alpha: 1.0)
+            }
+
+            appearance.shadowImage = nil
+            appearance.shadowColor = colorScheme == .dark
+                ? UIColor.white.withAlphaComponent(0.05)
+                : UIColor(red: 0.659, green: 0.671, blue: 0.710, alpha: 0.3)
+
+            UITabBar.appearance().standardAppearance = appearance
+            UITabBar.appearance().scrollEdgeAppearance = appearance
+        }
     }
 }

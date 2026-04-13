@@ -75,23 +75,50 @@ SPBChurchRadio/
     ├── DownloadsView.swift               — загруженные треки с обложками
     ├── MiniPlayerBar.swift               — мини-плеер с обложкой
     ├── NowPlayingView.swift              — полноэкранный плеер с круговым прогрессом
-    └── ArtworkView.swift                 — компонент отображения обложки
+    ├── ArtworkView.swift                 — компонент отображения обложки
+    └── AnimatedEqualizerView.swift       — анимированный эквалайзер
 ```
 
 ## Цветовая палитра
 
-Neumorphic палитра в стиле AirOS Music Player:
+Neumorphic палитра в стиле AirOS Music Player с поддержкой Dark Mode:
 
-| Цвет | Hex | Назначение |
-|------|-----|------------|
-| Background | `#F0F0F3` | Основной фон (neumorphic base) |
-| Surface | `#F2F2F5` | Карточки, поднятые элементы |
-| Shadow Light | `#FFFFFF` | Светлая тень (верх-лево) |
-| Shadow Dark | `#A8ABB5` | Тёмная тень (низ-право) |
-| Text Primary | `#1F1F24` | Основной текст |
-| Text Secondary | `#737380` | Вторичный текст |
+| Цвет | Light Hex | Dark Hex | Назначение |
+|------|-----------|----------|------------|
+| Background | `#F0F0F3` | `#1C1C24` | Основной фон (neumorphic base) |
+| Surface | `#F2F2F5` | `#26262E` | Карточки, поднятые элементы |
+| Shadow Light | `#FFFFFF` | `#FFFFFF` | Светлая тень (верх-лево) |
+| Shadow Dark | `#A8ABB5` | `#000000` | Тёмная тень (низ-право) |
+| Text Primary | `#1F1F24` | `#F2F2F5` | Основной текст |
+| Text Secondary | `#737380` | `#9999A6` | Вторичный текст |
+| Accent | `#D4A23A` | `#E8BE5A` | Золотой акцент |
 
 ## История изменений
+
+### v3.1 — Dark Mode + Эквалайзер + Золотые акценты
+- **Dark Mode** — полная адаптивная цветовая палитра, neumorphic тени и фоны для тёмной темы
+- **Animated Equalizer** — визуализация аудио: прыгающие полоски эквалайзера при воспроизведении
+  - LargeEqualizerView — для заголовка RadioView (7 полос)
+  - MiniEqualizerView — для live-индикатора, мини-плеера, строк треков (3–5 полос)
+- **Золотые акценты** — акцентный цвет #d4a23a теперь активно используется:
+  - Воспроизводимый трек подсвечивается золотым в списках
+  - Точки кольцевого прогресса окрашиваются в золотой при воспроизведении
+  - Кнопки play/stop выделяются золотым в активном состоянии
+  - Прогресс-бар и кольцо прогресса используют золотой градиент
+  - Заголовок "SPBChurch" в RadioView — золотой
+  - Fallback иконки artwork — золотые вместо серых
+- **Seek Slider** — слайдер перемотки на NowPlayingView (drag для перемотки)
+- **Blurred Background** — размытая обложка как фон на NowPlayingView
+- **Подсветка текущего трека** — золотой фон строки и мини-эквалайзер вместо статичной иконки
+- **Haptic Feedback** — тактильная отдача на кнопках play, next/prev, shuffle, download
+- **Улучшенный MiniPlayerBar** — статус "Воспроизведение"/"На паузе", эквалайзер на обложке, золотой play
+- **Animated Loading** — пульсирующие точки вместо ProgressView при загрузке треков
+- **Кнопка удаления** — иконка trash в DownloadsView для удаления загрузок
+- **Счётчики** — количество треков в TrackListView, количество загрузок в DownloadsView
+- **Кастомный Tab Bar** — tab bar подстраивается под цветовую тему (light/dark)
+- **AppGradients** — градиенты для акцентных элементов
+- **NeumorphicInset** — новый модификатор для вдавленных элементов
+- **Семантические цвета** — AppColors.success и AppColors.error для состояний
 
 ### v3.0 — Neumorphic UI (стиль AirOS Music Player)
 - Полный редизайн интерфейса в стиле neumorphic/soft UI по референсу Dribbble

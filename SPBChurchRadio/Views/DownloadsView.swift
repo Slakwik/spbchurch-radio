@@ -5,6 +5,7 @@ struct DownloadsView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var downloadedTracks: [Track] {
         trackListVM.tracks.filter { downloadManager.isDownloaded($0) }
@@ -20,6 +21,24 @@ struct DownloadsView: View {
                     emptyState
                 } else {
                     List {
+                        // Downloads count header
+                        HStack {
+                            Image(systemName: "internaldrive.fill")
+                                .font(.system(size: 12))
+                                .foregroundStyle(AppColors.accentAdaptive)
+                            Text("\(downloadedTracks.count) загружено")
+                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .foregroundStyle(AppColors.textSecondary)
+                            Spacer()
+                        }
+                        .listRowInsets(EdgeInsets(
+                            top: 4,
+                            leading: hSizeClass == .regular ? 24 : 16,
+                            bottom: 4,
+                            trailing: hSizeClass == .regular ? 24 : 16
+                        ))
+                        .listRowBackground(Color.clear)
+
                         ForEach(downloadedTracks) { track in
                             DownloadedTrackRow(track: track)
                                 .listRowInsets(EdgeInsets(
@@ -42,7 +61,7 @@ struct DownloadsView: View {
             }
             .navigationTitle("Загрузки")
             .toolbarTitleDisplayMode(.large)
-            .tint(AppColors.textPrimary)
+            .tint(AppColors.accentAdaptive)
         }
     }
 
@@ -78,6 +97,7 @@ struct DownloadedTrackRow: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var isCurrentTrack: Bool {
         radioPlayer.filePlayer.currentTrack?.url == track.url
@@ -98,17 +118,24 @@ struct DownloadedTrackRow: View {
                     RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
                         .fill(AppColors.background.opacity(0.6))
                         .frame(width: thumbSize, height: thumbSize)
-                    Image(systemName: "waveform")
-                        .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                        .foregroundStyle(AppColors.textPrimary)
-                        .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
+
+                    MiniEqualizerView(isPlaying: true, maxHeight: isIPad ? 18 : 14)
+                } else if isCurrentTrack {
+                    let thumbSize: CGFloat = isIPad ? 52 : 46
+                    RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
+                        .fill(AppColors.background.opacity(0.5))
+                        .frame(width: thumbSize, height: thumbSize)
+
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: isIPad ? 16 : 14, weight: .medium))
+                        .foregroundStyle(AppColors.accentAdaptive)
                 }
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? AppColors.textPrimary : AppColors.textPrimary.opacity(0.8))
+                    .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary.opacity(0.85))
                     .lineLimit(2)
 
                 HStack(spacing: 3) {
@@ -122,7 +149,19 @@ struct DownloadedTrackRow: View {
 
             Spacer()
 
+            // Delete button
             Button(action: {
+                HapticManager.lightImpact()
+                downloadManager.deleteDownload(track)
+            }) {
+                Image(systemName: "trash")
+                    .font(.system(size: isIPad ? 16 : 14, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+            }
+            .buttonStyle(.plain)
+
+            Button(action: {
+                HapticManager.mediumImpact()
                 if isCurrentTrack && radioPlayer.isFilePlaying {
                     radioPlayer.toggleFilePause()
                 } else {
@@ -139,7 +178,7 @@ struct DownloadedTrackRow: View {
 
                     Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                         .font(.system(size: isIPad ? 14 : 12, weight: .semibold))
-                        .foregroundStyle(AppColors.textPrimary)
+                        .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary)
                         .offset(x: isCurrentTrack && radioPlayer.isFilePlaying ? 0 : 1)
                         .contentTransition(.symbolEffect(.replace))
                 }
@@ -147,5 +186,15 @@ struct DownloadedTrackRow: View {
             .buttonStyle(NeumorphicButtonStyle())
         }
         .padding(.vertical, isIPad ? 6 : 4)
+        .padding(.horizontal, isCurrentTrack ? 10 : 0)
+        .background(
+            Group {
+                if isCurrentTrack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(AppColors.accentAdaptive.opacity(colorScheme == .dark ? 0.12 : 0.08))
+                }
+            }
+        )
+        .animation(.easeInOut(duration: 0.3), value: isCurrentTrack)
     }
 }

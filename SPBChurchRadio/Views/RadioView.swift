@@ -4,6 +4,7 @@ struct RadioView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var isLandscape: Bool { vSizeClass == .compact }
     private var isIPad: Bool { hSizeClass == .regular && vSizeClass == .regular }
@@ -83,10 +84,22 @@ struct RadioView: View {
 
     private var stationHeader: some View {
         HStack {
-            Text("Радио")
-                .font(.system(size: isIPad ? 36 : 28, weight: .bold, design: .rounded))
-                .foregroundStyle(AppColors.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Радио")
+                    .font(.system(size: isIPad ? 36 : 28, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Text("SPBChurch")
+                    .font(.system(size: isIPad ? 14 : 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(AppColors.accentAdaptive)
+            }
             Spacer()
+
+            // Equalizer in header when playing
+            if radioPlayer.isRadioPlaying {
+                LargeEqualizerView(isPlaying: true)
+                    .frame(height: 36)
+            }
         }
         .padding(.horizontal, 4)
     }
@@ -100,16 +113,21 @@ struct RadioView: View {
         let isPlaying = radioPlayer.isRadioPlaying
 
         return ZStack {
-            // Dotted ring
+            // Dotted ring — accent-colored when playing
             ForEach(0..<dotCount, id: \.self) { i in
                 let angle = Double(i) / Double(dotCount) * 360.0
                 let dotSize: CGFloat = i % 4 == 0 ? 6 : 4
 
                 Circle()
-                    .fill(AppColors.textPrimary.opacity(isPlaying ? 0.6 : 0.15))
+                    .fill(
+                        isPlaying
+                        ? AppColors.accentAdaptive.opacity(i % 4 == 0 ? 0.7 : 0.4)
+                        : AppColors.textPrimary.opacity(0.15)
+                    )
                     .frame(width: dotSize, height: dotSize)
                     .offset(y: -ringSize / 2)
                     .rotationEffect(.degrees(angle))
+                    .animation(.easeInOut(duration: 0.6), value: isPlaying)
             }
 
             // Frosted glass artwork circle
@@ -118,8 +136,8 @@ struct RadioView: View {
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color.white.opacity(0.9),
-                                AppColors.background.opacity(0.6)
+                                colorScheme == .dark ? Color.white.opacity(0.12) : Color.white.opacity(0.9),
+                                AppColors.background.opacity(colorScheme == .dark ? 0.8 : 0.6)
                             ],
                             center: .center,
                             startRadius: 0,
@@ -137,6 +155,14 @@ struct RadioView: View {
                     .blur(radius: 3)
                     .opacity(isPlaying ? 0.7 : 0.4)
                     .animation(.easeInOut(duration: 1.0), value: isPlaying)
+
+                // Gold ring border when playing
+                if isPlaying {
+                    Circle()
+                        .stroke(AppColors.accentAdaptive.opacity(0.3), lineWidth: 2)
+                        .frame(width: artSize - 4, height: artSize - 4)
+                        .transition(.opacity)
+                }
             }
             .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 20, x: 10, y: 10)
             .shadow(color: AppColors.shadowLight, radius: 20, x: -10, y: -10)
@@ -166,7 +192,7 @@ struct RadioView: View {
         HStack(spacing: isIPad ? 18 : 14) {
             // Left column
             VStack(spacing: isIPad ? 18 : 14) {
-                // Live indicator
+                // Live indicator with equalizer
                 liveIndicatorWidget
                 // File player bar (if file playing)
                 filePlayerWidget
@@ -182,16 +208,22 @@ struct RadioView: View {
 
     private var liveIndicatorWidget: some View {
         VStack(spacing: 6) {
-            if radioPlayer.isRadioPlaying {
-                Circle()
-                    .fill(Color.green)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: .green.opacity(0.5), radius: 4)
+            HStack(spacing: 8) {
+                if radioPlayer.isRadioPlaying {
+                    Circle()
+                        .fill(AppColors.success)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: AppColors.success.opacity(0.5), radius: 4)
+                }
+
+                Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "ОФЛАЙН")
+                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .foregroundStyle(radioPlayer.isRadioPlaying ? AppColors.accentAdaptive : AppColors.textSecondary)
+                    .tracking(1.5)
             }
-            Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "ОФЛАЙН")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(AppColors.textSecondary)
-                .tracking(1.5)
+
+            // Equalizer visualization
+            MiniEqualizerView(isPlaying: radioPlayer.isRadioPlaying)
         }
         .frame(maxWidth: .infinity)
         .frame(height: isIPad ? 80 : 65)
@@ -207,7 +239,7 @@ struct RadioView: View {
             VStack(spacing: 4) {
                 Image(systemName: "music.note")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary)
+                    .foregroundStyle(AppColors.accentAdaptive)
                 Text(track.title)
                     .font(.system(size: 10, weight: .medium, design: .rounded))
                     .foregroundStyle(AppColors.textPrimary)
@@ -262,7 +294,10 @@ struct RadioView: View {
             .offset(y: -wheelSize * 0.28)
 
             // Rewind (left)
-            Button(action: { radioPlayer.playPrevious() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playPrevious()
+            }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary.opacity(0.5))
@@ -270,7 +305,10 @@ struct RadioView: View {
             .offset(x: -wheelSize * 0.28)
 
             // Forward (right)
-            Button(action: { radioPlayer.playNext() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playNext()
+            }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary.opacity(0.5))
@@ -284,7 +322,10 @@ struct RadioView: View {
                 .offset(y: wheelSize * 0.28)
 
             // Center play/stop button
-            Button(action: { radioPlayer.toggleRadio() }) {
+            Button(action: {
+                HapticManager.mediumImpact()
+                radioPlayer.toggleRadio()
+            }) {
                 ZStack {
                     Circle()
                         .fill(AppColors.background)
@@ -294,7 +335,7 @@ struct RadioView: View {
 
                     Image(systemName: radioPlayer.isRadioPlaying ? "stop.fill" : "play.fill")
                         .font(.system(size: isIPad ? 22 : 18, weight: .medium))
-                        .foregroundStyle(AppColors.textPrimary)
+                        .foregroundStyle(radioPlayer.isRadioPlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
                         .offset(x: radioPlayer.isRadioPlaying ? 0 : 2)
                         .contentTransition(.symbolEffect(.replace))
                 }
@@ -349,7 +390,7 @@ struct FileNowPlayingBar: View {
         HStack(spacing: 10) {
             Image(systemName: "music.note")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(AppColors.textSecondary)
+                .foregroundColor(AppColors.accentAdaptive)
 
             Text(track.title)
                 .font(.system(size: 13, weight: .medium, design: .rounded))
@@ -358,25 +399,37 @@ struct FileNowPlayingBar: View {
 
             Spacer()
 
-            Button(action: { radioPlayer.filePlayer.shuffle.toggle() }) {
+            Button(action: {
+                HapticManager.selection()
+                radioPlayer.filePlayer.shuffle.toggle()
+            }) {
                 Image(systemName: "shuffle")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.textPrimary : AppColors.textSecondary.opacity(0.3))
+                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.3))
             }
 
-            Button(action: { radioPlayer.playPrevious() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playPrevious()
+            }) {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(AppColors.textPrimary.opacity(0.6))
             }
 
-            Button(action: { radioPlayer.toggleFilePause() }) {
+            Button(action: {
+                HapticManager.mediumImpact()
+                radioPlayer.toggleFilePause()
+            }) {
                 Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppColors.textPrimary)
             }
 
-            Button(action: { radioPlayer.playNext() }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                radioPlayer.playNext()
+            }) {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(AppColors.textPrimary.opacity(0.6))

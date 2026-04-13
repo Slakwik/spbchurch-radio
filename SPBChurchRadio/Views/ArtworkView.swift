@@ -5,6 +5,7 @@ struct ArtworkView: View {
     let url: URL
     let size: CGFloat
     var cornerRadius: CGFloat = 10
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var image: UIImage?
     @State private var loaded = false
@@ -23,7 +24,7 @@ struct ArtworkView: View {
                         .fill(AppColors.surface)
                     Image(systemName: "music.note")
                         .font(.system(size: size * 0.35, weight: .medium))
-                        .foregroundStyle(AppColors.textSecondary.opacity(0.4))
+                        .foregroundStyle(AppColors.accentAdaptive.opacity(0.3))
                 }
                 .frame(width: size, height: size)
             }
@@ -47,6 +48,7 @@ struct ArtworkView: View {
 struct ArtworkViewFrosted: View {
     let url: URL
     let size: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var image: UIImage?
     @State private var loaded = false
@@ -73,8 +75,12 @@ struct ArtworkViewFrosted: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    Color(red: 0.95, green: 0.95, blue: 0.97),
-                                    Color(red: 0.88, green: 0.88, blue: 0.92)
+                                    colorScheme == .dark
+                                    ? Color(red: 0.18, green: 0.18, blue: 0.22)
+                                    : Color(red: 0.95, green: 0.95, blue: 0.97),
+                                    colorScheme == .dark
+                                    ? Color(red: 0.12, green: 0.12, blue: 0.16)
+                                    : Color(red: 0.88, green: 0.88, blue: 0.92)
                                 ],
                                 center: .center,
                                 startRadius: 0,
@@ -83,7 +89,7 @@ struct ArtworkViewFrosted: View {
                         )
                     Image(systemName: "music.note")
                         .font(.system(size: size * 0.25, weight: .medium))
-                        .foregroundStyle(AppColors.textSecondary.opacity(0.3))
+                        .foregroundStyle(AppColors.accentAdaptive.opacity(0.25))
                 }
                 .frame(width: size, height: size)
             }

@@ -5,6 +5,7 @@ struct TrackListView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationStack {
@@ -13,36 +14,28 @@ struct TrackListView: View {
                     .ignoresSafeArea()
 
                 if trackListVM.isLoading {
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .controlSize(.large)
-                            .tint(AppColors.textSecondary)
-                        Text("Загрузка треков...")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
+                    loadingState
                 } else if let error = trackListVM.errorMessage {
-                    VStack(spacing: 20) {
-                        Image(systemName: "wifi.exclamationmark")
-                            .font(.system(size: 52, weight: .light))
-                            .foregroundStyle(AppColors.textSecondary.opacity(0.5))
-                            .symbolRenderingMode(.hierarchical)
-                        Text(error)
-                            .font(.system(size: 14, design: .rounded))
-                            .foregroundStyle(AppColors.textSecondary)
-                            .multilineTextAlignment(.center)
-                        Button(action: { trackListVM.refresh() }) {
-                            Text("Повторить")
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 10)
-                                .background(AppColors.textPrimary, in: Capsule())
-                        }
-                    }
-                    .padding()
+                    errorState(message: error)
                 } else {
                     List {
+                        // Track count header
+                        if !trackListVM.filteredTracks.isEmpty {
+                            HStack {
+                                Text("\(trackListVM.filteredTracks.count) треков")
+                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .foregroundStyle(AppColors.textSecondary)
+                                Spacer()
+                            }
+                            .listRowInsets(EdgeInsets(
+                                top: 4,
+                                leading: hSizeClass == .regular ? 24 : 16,
+                                bottom: 4,
+                                trailing: hSizeClass == .regular ? 24 : 16
+                            ))
+                            .listRowBackground(Color.clear)
+                        }
+
                         ForEach(trackListVM.filteredTracks) { track in
                             TrackRow(track: track)
                                 .listRowInsets(EdgeInsets(
@@ -64,11 +57,86 @@ struct TrackListView: View {
             .navigationTitle("Треки")
             .toolbarTitleDisplayMode(.large)
             .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
-            .tint(AppColors.textPrimary)
+            .tint(AppColors.accentAdaptive)
             .onAppear {
                 trackListVM.loadTracks()
             }
         }
+    }
+
+    // MARK: - Loading State
+
+    private var loadingState: some View {
+        VStack(spacing: 20) {
+            // Animated loading dots
+            HStack(spacing: 8) {
+                ForEach(0..<3, id: \.self) { i in
+                    PulsingDot(delay: Double(i) * 0.3)
+                }
+            }
+            Text("Загрузка треков...")
+                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .foregroundStyle(AppColors.textSecondary)
+        }
+    }
+
+    // MARK: - Error State
+
+    private func errorState(message: String) -> some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(AppColors.background)
+                    .frame(width: 80, height: 80)
+                    .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 6, x: 4, y: 4)
+                    .shadow(color: AppColors.shadowLight, radius: 6, x: -4, y: -4)
+
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 32, weight: .light))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                    .symbolRenderingMode(.hierarchical)
+            }
+
+            Text(message)
+                .font(.system(size: 14, design: .rounded))
+                .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button(action: {
+                HapticManager.lightImpact()
+                trackListVM.refresh()
+            }) {
+                Text("Повторить")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(AppGradients.accentGradient, in: Capsule())
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - Pulsing Dot (Loading Animation)
+
+private struct PulsingDot: View {
+    let delay: Double
+    @State private var isPulsing = false
+
+    var body: some View {
+        Circle()
+            .fill(AppColors.accentAdaptive)
+            .frame(width: 10, height: 10)
+            .scaleEffect(isPulsing ? 1.3 : 0.7)
+            .opacity(isPulsing ? 1.0 : 0.4)
+            .animation(
+                .easeInOut(duration: 0.6)
+                    .repeatForever(autoreverses: true)
+                    .delay(delay),
+                value: isPulsing
+            )
+            .onAppear { isPulsing = true }
     }
 }
 
@@ -79,6 +147,7 @@ struct TrackRow: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
+    @Environment(\.colorScheme) private var colorScheme
 
     private var isCurrentTrack: Bool {
         radioPlayer.filePlayer.currentTrack?.url == track.url
@@ -97,7 +166,7 @@ struct TrackRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
                     .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isCurrentTrack ? AppColors.textPrimary : AppColors.textPrimary.opacity(0.8))
+                    .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary.opacity(0.85))
                     .lineLimit(2)
 
                 if isDownloaded {
@@ -119,6 +188,16 @@ struct TrackRow: View {
             }
         }
         .padding(.vertical, isIPad ? 6 : 4)
+        .padding(.horizontal, isCurrentTrack ? 10 : 0)
+        .background(
+            Group {
+                if isCurrentTrack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(AppColors.accentAdaptive.opacity(colorScheme == .dark ? 0.12 : 0.08))
+                }
+            }
+        )
+        .animation(.easeInOut(duration: 0.3), value: isCurrentTrack)
     }
 
     private var trackThumbnail: some View {
@@ -132,10 +211,18 @@ struct TrackRow: View {
                 RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
                     .fill(AppColors.background.opacity(0.6))
                     .frame(width: thumbSize, height: thumbSize)
-                Image(systemName: "waveform")
-                    .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                    .foregroundStyle(AppColors.textPrimary)
-                    .symbolEffect(.variableColor.iterative.dimInactiveLayers, isActive: true)
+
+                // Mini equalizer instead of static waveform icon
+                MiniEqualizerView(isPlaying: true, maxHeight: isIPad ? 18 : 14)
+            } else if isCurrentTrack {
+                // Show paused indicator
+                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
+                    .fill(AppColors.background.opacity(0.5))
+                    .frame(width: thumbSize, height: thumbSize)
+
+                Image(systemName: "pause.fill")
+                    .font(.system(size: isIPad ? 16 : 14, weight: .medium))
+                    .foregroundStyle(AppColors.accentAdaptive)
             }
         }
     }
@@ -146,30 +233,39 @@ struct TrackRow: View {
         if isDownloaded {
             Image(systemName: "arrow.down.circle.fill")
                 .font(.system(size: iconSize))
-                .foregroundStyle(AppColors.textSecondary)
+                .foregroundStyle(AppColors.accentAdaptive.opacity(0.6))
                 .symbolRenderingMode(.hierarchical)
         } else if let state = downloadManager.downloads[track.url] {
             switch state {
             case .downloading(let progress):
                 CircularProgressView(progress: progress)
                     .frame(width: iconSize, height: iconSize)
-                    .onTapGesture { downloadManager.cancelDownload(track) }
+                    .onTapGesture {
+                        HapticManager.lightImpact()
+                        downloadManager.cancelDownload(track)
+                    }
             case .completed:
                 Image(systemName: "arrow.down.circle.fill")
                     .font(.system(size: iconSize))
                     .foregroundStyle(AppColors.textSecondary)
                     .symbolRenderingMode(.hierarchical)
             case .failed:
-                Button(action: { downloadManager.download(track) }) {
+                Button(action: {
+                    HapticManager.lightImpact()
+                    downloadManager.download(track)
+                }) {
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: iconSize))
-                        .foregroundStyle(.red)
+                        .foregroundStyle(AppColors.error)
                         .symbolRenderingMode(.hierarchical)
                 }
                 .buttonStyle(.plain)
             }
         } else {
-            Button(action: { downloadManager.download(track) }) {
+            Button(action: {
+                HapticManager.lightImpact()
+                downloadManager.download(track)
+            }) {
                 Image(systemName: "arrow.down.circle")
                     .font(.system(size: iconSize))
                     .foregroundStyle(AppColors.textSecondary)
@@ -189,7 +285,7 @@ struct TrackRow: View {
 
                 Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: isIPad ? 14 : 12, weight: .semibold))
-                    .foregroundStyle(AppColors.textPrimary)
+                    .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary)
                     .offset(x: isCurrentTrack && radioPlayer.isFilePlaying ? 0 : 1)
                     .contentTransition(.symbolEffect(.replace))
             }
@@ -198,6 +294,7 @@ struct TrackRow: View {
     }
 
     private func playTrack() {
+        HapticManager.mediumImpact()
         if isCurrentTrack && radioPlayer.isFilePlaying {
             radioPlayer.toggleFilePause()
         } else {
@@ -219,7 +316,7 @@ struct CircularProgressView: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    AppColors.textPrimary,
+                    AppGradients.accentGradient,
                     style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
