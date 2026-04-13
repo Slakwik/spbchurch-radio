@@ -28,6 +28,9 @@
                 A10020 /* AnimatedEqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
                 A10021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10021; };
                 A10022 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
+                A10023 /* AppNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10023; };
+                A10024 /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10024; };
+                A10025 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10025; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +56,9 @@
                 B10020 /* AnimatedEqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEqualizerView.swift; sourceTree = "<group>"; };
                 B10021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
                 B10022 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+                B10023 /* AppNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigator.swift; sourceTree = "<group>"; };
+                B10024 /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
+                B10025 /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
                 B10099 /* SPBChurchRadio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPBChurchRadio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -110,6 +116,7 @@
                                 B10019 /* NowPlayingView.swift */,
                                 B10020 /* AnimatedEqualizerView.swift */,
                                 B10021 /* SettingsView.swift */,
+                                B10025 /* FavoritesView.swift */,
                         );
                         path = Views;
                         sourceTree = "<group>";
@@ -120,6 +127,7 @@
                                 B10012 /* RadioPlayerViewModel.swift */,
                                 B10013 /* TrackListViewModel.swift */,
                                 B10022 /* ThemeManager.swift */,
+                                B10023 /* AppNavigator.swift */,
                         );
                         path = ViewModels;
                         sourceTree = "<group>";
@@ -132,6 +140,7 @@
                                 B10010 /* DownloadManager.swift */,
                                 B10011 /* FilePlayerService.swift */,
                                 B10017 /* ArtworkService.swift */,
+                                B10024 /* FavoritesManager.swift */,
                         );
                         path = Services;
                         sourceTree = "<group>";
@@ -233,6 +242,9 @@
                                 A10020 /* AnimatedEqualizerView.swift in Sources */,
                                 A10021 /* SettingsView.swift in Sources */,
                                 A10022 /* ThemeManager.swift in Sources */,
+                                A10023 /* AppNavigator.swift in Sources */,
+                                A10024 /* FavoritesManager.swift in Sources */,
+                                A10025 /* FavoritesView.swift in Sources */,
                         );
                         runOnlyForDeploymentPostprocessing = 0;
                 };
