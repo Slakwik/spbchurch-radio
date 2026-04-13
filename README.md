@@ -66,7 +66,8 @@ SPBChurchRadio/
 │   └── DownloadManager.swift             — офлайн-кеширование файлов
 ├── ViewModels/
 │   ├── RadioPlayerViewModel.swift        — управление воспроизведением, next/prev
-│   └── TrackListViewModel.swift          — список треков, поиск, фильтрация
+│   ├── TrackListViewModel.swift          — список треков, поиск, фильтрация
+│   └── ThemeManager.swift                — управление темой (system/light/dark)
 └── Views/
     ├── Theme.swift                       — цветовая палитра spbchurch.ru
     ├── ContentView.swift                 — TabView с мини-плеером
@@ -76,7 +77,8 @@ SPBChurchRadio/
     ├── MiniPlayerBar.swift               — мини-плеер с обложкой
     ├── NowPlayingView.swift              — полноэкранный плеер с круговым прогрессом
     ├── ArtworkView.swift                 — компонент отображения обложки
-    └── AnimatedEqualizerView.swift       — анимированный эквалайзер
+    ├── AnimatedEqualizerView.swift       — анимированный эквалайзер
+    └── SettingsView.swift                — настройки (тема, ссылки, о приложении)
 ```
 
 ## Цветовая палитра
@@ -119,6 +121,11 @@ Neumorphic палитра в стиле AirOS Music Player с поддержко
 - **AppGradients** — градиенты для акцентных элементов
 - **NeumorphicInset** — новый модификатор для вдавленных элементов
 - **Семантические цвета** — AppColors.success и AppColors.error для состояний
+- **Экран настроек** — новая вкладка «Настройки»:
+  - Выбор темы: системная / светлая / тёмная (сохраняется в UserDefaults)
+  - Ссылки на сайт радиостанции (station.spbchurch.ru) и церковь (spbchurch.ru)
+  - Описание приложения — полноэкранный экран с информацией о приложении, возможностях и благодарностях
+- **ThemeManager** — ObservableObject для управления цветовой схемой приложения через .preferredColorScheme()
 
 ### v3.0 — Neumorphic UI (стиль AirOS Music Player)
 - Полный редизайн интерфейса в стиле neumorphic/soft UI по референсу Dribbble

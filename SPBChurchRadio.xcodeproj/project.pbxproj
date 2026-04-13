@@ -26,6 +26,8 @@
                 A10018 /* ArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10018; };
                 A10019 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10019; };
                 A10020 /* AnimatedEqualizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10020; };
+                A10021 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10021; };
+                A10022 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10022; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +51,8 @@
                 B10018 /* ArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkView.swift; sourceTree = "<group>"; };
                 B10019 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
                 B10020 /* AnimatedEqualizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEqualizerView.swift; sourceTree = "<group>"; };
+                B10021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+                B10022 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
                 B10099 /* SPBChurchRadio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPBChurchRadio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -105,6 +109,7 @@
                                 B10018 /* ArtworkView.swift */,
                                 B10019 /* NowPlayingView.swift */,
                                 B10020 /* AnimatedEqualizerView.swift */,
+                                B10021 /* SettingsView.swift */,
                         );
                         path = Views;
                         sourceTree = "<group>";
@@ -114,6 +119,7 @@
                         children = (
                                 B10012 /* RadioPlayerViewModel.swift */,
                                 B10013 /* TrackListViewModel.swift */,
+                                B10022 /* ThemeManager.swift */,
                         );
                         path = ViewModels;
                         sourceTree = "<group>";
@@ -225,6 +231,8 @@
                                 A10018 /* ArtworkView.swift in Sources */,
                                 A10019 /* NowPlayingView.swift in Sources */,
                                 A10020 /* AnimatedEqualizerView.swift in Sources */,
+                                A10021 /* SettingsView.swift in Sources */,
+                                A10022 /* ThemeManager.swift in Sources */,
                         );
                         runOnlyForDeploymentPostprocessing = 0;
                 };
