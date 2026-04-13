@@ -2,6 +2,8 @@ import SwiftUI
 
 struct RadioView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
+    @EnvironmentObject var trackListVM: TrackListViewModel
+    @EnvironmentObject var navigator: AppNavigator
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -178,7 +180,7 @@ struct RadioView: View {
     // MARK: - Track Info
 
     private var trackInfo: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 8) {
             Text(radioPlayer.currentRadioTrack)
                 .font(.system(size: isIPad ? 20 : 17, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
@@ -188,7 +190,38 @@ struct RadioView: View {
             Text("SPBChurch Radio")
                 .font(.system(size: isIPad ? 15 : 13, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
+
+            if RadioTitle.isSearchable(radioPlayer.currentRadioTrack) {
+                findTrackButton
+                    .padding(.top, 4)
+            }
         }
+    }
+
+    // MARK: - Find Track Button
+
+    private var findTrackButton: some View {
+        Button(action: findCurrentTrackInLibrary) {
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("Найти в библиотеке")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(AppColors.accentAdaptive)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(NeumorphicButtonStyle())
+        .neumorphicRaised(cornerRadius: 20)
+    }
+
+    private func findCurrentTrackInLibrary() {
+        let query = RadioTitle.cleaned(radioPlayer.currentRadioTrack)
+        guard !query.isEmpty else { return }
+        HapticManager.mediumImpact()
+        trackListVM.searchText = query
+        navigator.go(to: .tracks)
     }
 
     // MARK: - Controls Grid

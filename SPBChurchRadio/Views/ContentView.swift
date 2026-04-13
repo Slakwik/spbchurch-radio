@@ -3,13 +3,13 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var themeManager: ThemeManager
+    @EnvironmentObject var navigator: AppNavigator
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
-    @State private var selectedTab = 0
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            TabView(selection: $selectedTab) {
+            TabView(selection: $navigator.selectedTab) {
                 RadioView()
                     .tabItem {
                         Label("Радио", systemImage: "antenna.radiowaves.left.and.right")
@@ -39,8 +39,8 @@ struct ContentView: View {
             // Floating mini player (not on Radio & Settings tabs)
             if radioPlayer.activeMode == .file,
                radioPlayer.filePlayer.currentTrack != nil,
-               selectedTab != 0,
-               selectedTab != 3 {
+               navigator.selectedTab != 0,
+               navigator.selectedTab != 3 {
                 MiniPlayerBar()
                     .frame(maxWidth: hSizeClass == .regular ? 600 : .infinity)
                     .padding(.horizontal, hSizeClass == .regular ? 40 : 12)
