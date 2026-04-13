@@ -27,7 +27,7 @@ struct DownloadsView: View {
                                 .font(.system(size: 12))
                                 .foregroundStyle(AppColors.accentAdaptive)
                             Text("\(downloadedTracks.count) загружено")
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
+                                .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(AppColors.textSecondary)
                             Spacer()
                         }
@@ -81,11 +81,11 @@ struct DownloadsView: View {
             }
 
             Text("Нет загруженных треков")
-                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(AppColors.textPrimary)
 
             Text("Загрузите треки во вкладке \"Треки\"\nдля офлайн-прослушивания")
-                .font(.system(size: 14, design: .rounded))
+                .font(.system(size: 14))
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -134,7 +134,7 @@ struct DownloadedTrackRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
-                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
+                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular))
                     .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary.opacity(0.85))
                     .lineLimit(2)
 

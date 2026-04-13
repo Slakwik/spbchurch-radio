@@ -97,6 +97,11 @@ Neumorphic палитра в стиле AirOS Music Player с поддержко
 
 ## История изменений
 
+### v3.4 — Современная типографика
+- Убрана округлая семейка SF Rounded (`design: .rounded`) во всех экранах
+- Теперь используется системный SF Pro Display/Text — чёткий геометрический sans-serif в духе референса AirOS
+- Заменено в 42 местах в 6 файлах: RadioView, NowPlayingView, TrackListView, DownloadsView, MiniPlayerBar, SettingsView
+
 ### v3.3.2 — Открытие плеера с экрана радио
 - Виджет текущего трека на главном экране радио теперь кликабельный
 - По нажатию открывается полноэкранный `NowPlayingView` с текущим треком

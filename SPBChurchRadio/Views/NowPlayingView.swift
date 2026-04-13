@@ -91,7 +91,7 @@ struct NowPlayingView: View {
     private var header: some View {
         HStack {
             Text("Музыка")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
             Spacer()
@@ -152,13 +152,13 @@ struct NowPlayingView: View {
     private var trackInfo: some View {
         VStack(spacing: 4) {
             Text(player.currentTrack?.title ?? "")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
             Text("SPBChurch Radio")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
         .padding(.horizontal, 30)
@@ -224,7 +224,7 @@ struct NowPlayingView: View {
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(player.shuffle ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.4))
                         Text(player.shuffle ? "Микс" : "x1")
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(AppColors.textSecondary)
                     }
                 }

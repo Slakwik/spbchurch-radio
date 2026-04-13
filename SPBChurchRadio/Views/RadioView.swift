@@ -91,11 +91,11 @@ struct RadioView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Радио")
-                    .font(.system(size: isIPad ? 36 : 28, weight: .bold, design: .rounded))
+                    .font(.system(size: isIPad ? 36 : 28, weight: .bold))
                     .foregroundStyle(AppColors.textPrimary)
 
                 Text("SPBChurch")
-                    .font(.system(size: isIPad ? 14 : 12, weight: .medium, design: .rounded))
+                    .font(.system(size: isIPad ? 14 : 12, weight: .medium))
                     .foregroundStyle(AppColors.accentAdaptive)
             }
             Spacer()
@@ -180,13 +180,13 @@ struct RadioView: View {
     private var trackInfo: some View {
         VStack(spacing: 4) {
             Text(radioPlayer.currentRadioTrack)
-                .font(.system(size: isIPad ? 20 : 17, weight: .bold, design: .rounded))
+                .font(.system(size: isIPad ? 20 : 17, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
 
             Text("SPBChurch Radio")
-                .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
+                .font(.system(size: isIPad ? 15 : 13, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
     }
@@ -222,7 +222,7 @@ struct RadioView: View {
                 }
 
                 Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "ОФЛАЙН")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundStyle(radioPlayer.isRadioPlaying ? AppColors.accentAdaptive : AppColors.textSecondary)
                     .tracking(1.5)
             }
@@ -255,7 +255,7 @@ struct RadioView: View {
                             .foregroundStyle(AppColors.textSecondary)
                     }
                     Text(track.title)
-                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
                         .padding(.horizontal, 8)
@@ -409,7 +409,7 @@ struct FileNowPlayingBar: View {
                 .foregroundColor(AppColors.accentAdaptive)
 
             Text(track.title)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundColor(AppColors.textPrimary)
                 .lineLimit(1)
 

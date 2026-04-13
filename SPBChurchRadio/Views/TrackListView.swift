@@ -23,7 +23,7 @@ struct TrackListView: View {
                         if !trackListVM.filteredTracks.isEmpty {
                             HStack {
                                 Text("\(trackListVM.filteredTracks.count) треков")
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(AppColors.textSecondary)
                                 Spacer()
                             }
@@ -100,7 +100,7 @@ struct TrackListView: View {
                 }
             }
             Text("Загрузка треков...")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
     }
@@ -123,7 +123,7 @@ struct TrackListView: View {
             }
 
             Text(message)
-                .font(.system(size: 14, design: .rounded))
+                .font(.system(size: 14))
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -132,7 +132,7 @@ struct TrackListView: View {
                 trackListVM.refresh()
             }) {
                 Text("Повторить")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 10)
@@ -190,7 +190,7 @@ struct TrackRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(track.title)
-                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular, design: .rounded))
+                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular))
                     .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary.opacity(0.85))
                     .lineLimit(2)
 

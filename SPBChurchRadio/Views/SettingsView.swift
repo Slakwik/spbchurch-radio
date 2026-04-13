@@ -46,7 +46,7 @@ struct SettingsView: View {
     private func settingsSectionHeader(_ title: String) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(AppColors.textSecondary)
                 .tracking(1)
             Spacer()
@@ -88,7 +88,7 @@ struct SettingsView: View {
                 }
 
                 Text(mode.displayName)
-                    .font(.system(size: isIPad ? 17 : 15, weight: .medium, design: .rounded))
+                    .font(.system(size: isIPad ? 17 : 15, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary)
 
                 Spacer()
@@ -160,10 +160,10 @@ struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: isIPad ? 17 : 15, weight: .medium, design: .rounded))
+                        .font(.system(size: isIPad ? 17 : 15, weight: .medium))
                         .foregroundStyle(AppColors.textPrimary)
                     Text(subtitle)
-                        .font(.system(size: isIPad ? 13 : 12, weight: .regular, design: .rounded))
+                        .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
 
@@ -200,10 +200,10 @@ struct SettingsView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("SPBChurch Radio")
-                        .font(.system(size: isIPad ? 17 : 15, weight: .semibold, design: .rounded))
+                        .font(.system(size: isIPad ? 17 : 15, weight: .semibold))
                         .foregroundStyle(AppColors.textPrimary)
                     Text("Версия 3.1")
-                        .font(.system(size: isIPad ? 13 : 12, weight: .regular, design: .rounded))
+                        .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
 
@@ -224,7 +224,7 @@ struct SettingsView: View {
             }) {
                 HStack {
                     Text("Описание приложения")
-                        .font(.system(size: isIPad ? 15 : 14, weight: .medium, design: .rounded))
+                        .font(.system(size: isIPad ? 15 : 14, weight: .medium))
                         .foregroundStyle(AppColors.accentAdaptive)
 
                     Spacer()
@@ -260,7 +260,7 @@ private struct AboutAppView: View {
                 // Header
                 HStack {
                     Text("О приложении")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundStyle(AppColors.textPrimary)
 
                     Spacer()
@@ -326,11 +326,11 @@ private struct AboutAppView: View {
             }
 
             Text("SPBChurch Radio")
-                .font(.system(size: isIPad ? 24 : 20, weight: .bold, design: .rounded))
+                .font(.system(size: isIPad ? 24 : 20, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
             Text("Версия 3.1")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
     }
@@ -338,21 +338,21 @@ private struct AboutAppView: View {
     private var descriptionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("О приложении", systemImage: "text.quote")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(AppColors.accentAdaptive)
 
             Text("SPBChurch Radio — это официальное мобильное приложение интернет-радиостанции церкви евангельских христиан-баптистов «Преображение» города Санкт-Петербурга. Приложение создано для удобного прослушивания радиопотока и каталога духовной музыки в любое время и в любом месте.")
-                .font(.system(size: isIPad ? 16 : 14, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
             Text("Слушайте прямой эфир радиостанции с отображением текущего трека в реальном времени, просматривайте каталог из более чем 2000 аудиозаписей, создавайте собственные плейлисты с помощью функции случайного воспроизведения и загружайте любимые треки для офлайн-прослушивания — всё это доступно без регистрации и подписок.")
-                .font(.system(size: isIPad ? 16 : 14, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
             Text("Приложение поддерживает фоновое воспроизведение, управление с экрана блокировки и через наушники, а также адаптируется под любой размер экрана — от компактного iPhone до iPad.")
-                .font(.system(size: isIPad ? 16 : 14, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
         }
@@ -363,7 +363,7 @@ private struct AboutAppView: View {
     private var featuresCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Возможности", systemImage: "sparkles")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(AppColors.accentAdaptive)
 
             featureRow(icon: "antenna.radiowaves.left.and.right", text: "Прямой эфир радиостанции с метаданными треков")
@@ -386,7 +386,7 @@ private struct AboutAppView: View {
                 .frame(width: 24)
 
             Text(text)
-                .font(.system(size: isIPad ? 15 : 13, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 15 : 13, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
 
             Spacer(minLength: 0)
@@ -396,16 +396,16 @@ private struct AboutAppView: View {
     private var creditsCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Благодарности", systemImage: "heart.fill")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(AppColors.accentAdaptive)
 
             Text("Приложение разработано для церкви ЕХБ «Преображение» (Санкт-Петербург) с любовью и вниманием к деталям. Дизайн вдохновлён neumorphic стилем и стремлением создать тёплое, уютное пространство для прослушивания духовной музыки.")
-                .font(.system(size: isIPad ? 16 : 14, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
             Text("Иллюстрация «Древо с корнями» символизирует духовное возрастание и укоренение в вере — центральный визуальный мотив приложения.")
-                .font(.system(size: isIPad ? 16 : 14, weight: .regular, design: .rounded))
+                .font(.system(size: isIPad ? 16 : 14, weight: .regular))
                 .foregroundStyle(AppColors.textPrimary.opacity(0.85))
                 .lineSpacing(4)
 
@@ -414,7 +414,7 @@ private struct AboutAppView: View {
                     .font(.system(size: 12))
                     .foregroundStyle(AppColors.accentAdaptive)
                 Text("Слава Богу за всё.")
-                    .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
+                    .font(.system(size: isIPad ? 15 : 13, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary)
             }
             .padding(.top, 4)

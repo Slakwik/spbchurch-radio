@@ -56,12 +56,12 @@ struct MiniPlayerBar: View {
                     }) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(track.title)
-                                .font(.system(size: isIPad ? 15 : 13, weight: .medium, design: .rounded))
+                                .font(.system(size: isIPad ? 15 : 13, weight: .medium))
                                 .foregroundStyle(AppColors.textPrimary)
                                 .lineLimit(1)
 
                             Text(radioPlayer.isFilePlaying ? "Воспроизведение" : "На паузе")
-                                .font(.system(size: 10, weight: .medium, design: .rounded))
+                                .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(radioPlayer.isFilePlaying ? AppColors.accentAdaptive : AppColors.textSecondary)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
