@@ -1,14 +1,13 @@
 import SwiftUI
 
 struct DownloadsView: View {
-    @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
     private var downloadedTracks: [Track] {
-        trackListVM.tracks.filter { downloadManager.isDownloaded($0) }
+        downloadManager.downloadedTracks
     }
 
     var body: some View {

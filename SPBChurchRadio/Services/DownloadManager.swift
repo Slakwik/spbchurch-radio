@@ -5,6 +5,10 @@ import Combine
 class DownloadManager: ObservableObject {
     @Published var downloads: [URL: DownloadState] = [:]
 
+    /// Persisted list of tracks with completed downloads — available even when
+    /// the remote catalog has not been fetched yet.
+    @Published private(set) var downloadedTracks: [Track] = []
+
     private var activeTasks: [URL: URLSessionDownloadTask] = [:]
 
     enum DownloadState {
@@ -13,6 +17,12 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
+    init() {
+        loadMetadata()
+    }
+
+    // MARK: - Paths
+
     static var downloadsDirectory: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let dir = docs.appendingPathComponent("OfflineTracks", isDirectory: true)
@@ -20,8 +30,11 @@ class DownloadManager: ObservableObject {
         return dir
     }
 
+    private static var metadataFileURL: URL {
+        downloadsDirectory.appendingPathComponent("downloads.json")
+    }
+
     static func localFileURL(for track: Track) -> URL {
-        // SHA-256 hash of the full URL — unique per track
         let data = Data(track.url.absoluteString.utf8)
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         data.withUnsafeBytes {
@@ -31,6 +44,8 @@ class DownloadManager: ObservableObject {
         return downloadsDirectory.appendingPathComponent("\(hex).mp3")
     }
 
+    // MARK: - Queries
+
     func isDownloaded(_ track: Track) -> Bool {
         FileManager.default.fileExists(atPath: Self.localFileURL(for: track).path)
     }
@@ -39,6 +54,8 @@ class DownloadManager: ObservableObject {
         let url = Self.localFileURL(for: track)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
+
+    // MARK: - Download
 
     func download(_ track: Track) {
         guard activeTasks[track.url] == nil else { return }
@@ -67,6 +84,7 @@ class DownloadManager: ObservableObject {
                     }
                     try FileManager.default.moveItem(at: tempURL, to: dest)
                     self.downloads[track.url] = .completed
+                    self.registerDownloaded(track)
                     self.objectWillChange.send()
                 } catch {
                     self.downloads[track.url] = .failed(error)
@@ -77,7 +95,6 @@ class DownloadManager: ObservableObject {
         activeTasks[track.url] = task
         task.resume()
 
-        // Observe progress
         let observation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
             DispatchQueue.main.async {
                 self?.downloads[track.url] = .downloading(progress: progress.fractionCompleted)
@@ -95,6 +112,56 @@ class DownloadManager: ObservableObject {
     func deleteDownload(_ track: Track) {
         try? FileManager.default.removeItem(at: Self.localFileURL(for: track))
         downloads.removeValue(forKey: track.url)
+        unregisterDownloaded(track)
         objectWillChange.send()
+    }
+
+    // MARK: - Metadata persistence
+
+    private func loadMetadata() {
+        let url = Self.metadataFileURL
+        guard let data = try? Data(contentsOf: url),
+              let tracks = try? JSONDecoder().decode([Track].self, from: data) else {
+            return
+        }
+        // Drop entries whose files have been removed from disk out-of-band
+        downloadedTracks = tracks.filter { isDownloaded($0) }
+        if downloadedTracks.count != tracks.count {
+            saveMetadata()
+        }
+    }
+
+    private func saveMetadata() {
+        let url = Self.metadataFileURL
+        guard let data = try? JSONEncoder().encode(downloadedTracks) else { return }
+        try? data.write(to: url, options: .atomic)
+    }
+
+    private func registerDownloaded(_ track: Track) {
+        if let idx = downloadedTracks.firstIndex(where: { $0.url == track.url }) {
+            downloadedTracks[idx] = track
+        } else {
+            downloadedTracks.append(track)
+        }
+        saveMetadata()
+    }
+
+    private func unregisterDownloaded(_ track: Track) {
+        downloadedTracks.removeAll { $0.url == track.url }
+        saveMetadata()
+    }
+
+    /// Opportunistic backfill: when the remote catalog arrives, record any
+    /// tracks whose files already exist on disk but are missing from metadata
+    /// (e.g. downloaded in a pre-v3.5 build without persisted metadata).
+    func backfillMetadata(from catalog: [Track]) {
+        var added = false
+        for track in catalog where isDownloaded(track) {
+            if !downloadedTracks.contains(where: { $0.url == track.url }) {
+                downloadedTracks.append(track)
+                added = true
+            }
+        }
+        if added { saveMetadata() }
     }
 }

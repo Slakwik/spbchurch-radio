@@ -20,6 +20,7 @@ struct SPBChurchRadioApp: App {
                 }
                 .onReceive(trackListVM.$tracks) { tracks in
                     radioPlayer.allTracks = tracks
+                    downloadManager.backfillMetadata(from: tracks)
                 }
         }
     }
