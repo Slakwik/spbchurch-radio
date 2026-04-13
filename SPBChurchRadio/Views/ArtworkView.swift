@@ -61,14 +61,6 @@ struct ArtworkViewFrosted: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
                     .clipShape(Circle())
-                    .blur(radius: 8)
-                    .overlay(
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: size * 0.7, height: size * 0.7)
-                            .clipShape(Circle())
-                    )
             } else {
                 ZStack {
                     Circle()
