@@ -25,11 +25,15 @@ enum RadioTitle {
     /// and any leading/trailing separators so the result is suitable as a
     /// search query for the Tracks tab.
     static func cleaned(_ raw: String) -> String {
+        // Order matters: longer phrases come first so shorter ones don't
+        // swallow parts of them before they can match as a whole.
         let noise: [String] = [
             "SPBChurch Radio",
             "SPB Church Radio",
-            "Церковь Преображение",
+            "SPBChurch",
+            "SPB Church",
             "Церковь «Преображение»",
+            "Церковь Преображение",
             "Преображение"
         ]
 
