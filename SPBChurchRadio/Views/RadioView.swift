@@ -5,6 +5,7 @@ struct RadioView: View {
     @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var navigator: AppNavigator
     @EnvironmentObject var favoritesManager: FavoritesManager
+    @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -29,6 +30,7 @@ struct RadioView: View {
                 NowPlayingView()
                     .environmentObject(radioPlayer)
                     .environmentObject(favoritesManager)
+                    .environmentObject(downloadManager)
             }
         }
     }

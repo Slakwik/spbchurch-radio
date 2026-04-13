@@ -3,6 +3,7 @@ import SwiftUI
 struct NowPlayingView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var favoritesManager: FavoritesManager
+    @EnvironmentObject var downloadManager: DownloadManager
     @Environment(\.dismiss) private var dismiss
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -100,6 +101,9 @@ struct NowPlayingView: View {
             // Mini equalizer in header
             MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
 
+            // Download toggle
+            downloadButton
+
             // Favorite toggle
             favoriteButton
 
@@ -134,6 +138,46 @@ struct NowPlayingView: View {
                     .symbolEffect(.bounce, value: isFav)
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
+            }
+        }
+    }
+
+    // MARK: - Download Button
+
+    @ViewBuilder
+    private var downloadButton: some View {
+        if let track = player.currentTrack {
+            if downloadManager.isDownloaded(track) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppColors.success)
+                    .symbolRenderingMode(.hierarchical)
+                    .frame(width: 44, height: 44)
+            } else if case .downloading(let progress) = downloadManager.downloads[track.url] {
+                ZStack {
+                    CircularProgressView(progress: progress)
+                        .frame(width: 20, height: 20)
+                    Image(systemName: "stop.fill")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    HapticManager.lightImpact()
+                    downloadManager.cancelDownload(track)
+                }
+            } else {
+                Button(action: {
+                    HapticManager.mediumImpact()
+                    downloadManager.download(track)
+                }) {
+                    Image(systemName: "arrow.down.circle")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
             }
         }
     }
