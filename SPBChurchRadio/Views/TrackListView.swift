@@ -57,10 +57,35 @@ struct TrackListView: View {
             .navigationTitle("Треки")
             .toolbarTitleDisplayMode(.large)
             .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    sortMenu
+                }
+            }
             .tint(AppColors.accentAdaptive)
             .onAppear {
                 trackListVM.loadTracks()
             }
+        }
+    }
+
+    // MARK: - Sort Menu
+
+    private var sortMenu: some View {
+        Menu {
+            Picker("Сортировка", selection: $trackListVM.sortOrder) {
+                ForEach(TrackListViewModel.SortOrder.allCases) { order in
+                    Label(order.displayName, systemImage: order.iconName)
+                        .tag(order)
+                }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down.circle")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(AppColors.accentAdaptive)
+        }
+        .onChange(of: trackListVM.sortOrder) { _, _ in
+            HapticManager.selection()
         }
     }
 
