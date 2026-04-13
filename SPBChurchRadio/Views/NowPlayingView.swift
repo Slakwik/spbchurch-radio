@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NowPlayingView: View {
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.dismiss) private var dismiss
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.colorScheme) private var colorScheme
@@ -89,7 +90,7 @@ struct NowPlayingView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 8) {
             Text("Музыка")
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
@@ -98,6 +99,9 @@ struct NowPlayingView: View {
 
             // Mini equalizer in header
             MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
+
+            // Favorite toggle
+            favoriteButton
 
             Button(action: {
                 HapticManager.lightImpact()
@@ -112,6 +116,26 @@ struct NowPlayingView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, isLandscape ? 8 : 12)
+    }
+
+    // MARK: - Favorite Button
+
+    @ViewBuilder
+    private var favoriteButton: some View {
+        if let track = player.currentTrack {
+            let isFav = favoritesManager.isFavorite(track)
+            Button(action: {
+                HapticManager.mediumImpact()
+                favoritesManager.toggle(track)
+            }) {
+                Image(systemName: isFav ? "heart.fill" : "heart")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(isFav ? AppColors.accentAdaptive : AppColors.textSecondary)
+                    .symbolEffect(.bounce, value: isFav)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+        }
     }
 
     // MARK: - Dotted Progress Artwork

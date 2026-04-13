@@ -7,6 +7,7 @@ struct SPBChurchRadioApp: App {
     @StateObject private var downloadManager = DownloadManager()
     @StateObject private var themeManager = ThemeManager()
     @StateObject private var navigator = AppNavigator()
+    @StateObject private var favoritesManager = FavoritesManager()
 
     var body: some Scene {
         WindowGroup {
@@ -16,6 +17,7 @@ struct SPBChurchRadioApp: App {
                 .environmentObject(downloadManager)
                 .environmentObject(themeManager)
                 .environmentObject(navigator)
+                .environmentObject(favoritesManager)
                 .preferredColorScheme(themeManager.mode.colorScheme)
                 .onAppear {
                     radioPlayer.downloadManager = downloadManager

@@ -22,17 +22,23 @@ struct ContentView: View {
                     }
                     .tag(1)
 
+                FavoritesView()
+                    .tabItem {
+                        Label("Избранное", systemImage: "heart.fill")
+                    }
+                    .tag(2)
+
                 DownloadsView()
                     .tabItem {
                         Label("Загрузки", systemImage: "arrow.down.circle.fill")
                     }
-                    .tag(2)
+                    .tag(3)
 
                 SettingsView()
                     .tabItem {
                         Label("Настройки", systemImage: "gearshape.fill")
                     }
-                    .tag(3)
+                    .tag(4)
             }
             .tint(AppColors.accentAdaptive)
 
@@ -40,7 +46,7 @@ struct ContentView: View {
             if radioPlayer.activeMode == .file,
                radioPlayer.filePlayer.currentTrack != nil,
                navigator.selectedTab != 0,
-               navigator.selectedTab != 3 {
+               navigator.selectedTab != 4 {
                 MiniPlayerBar()
                     .frame(maxWidth: hSizeClass == .regular ? 600 : .infinity)
                     .padding(.horizontal, hSizeClass == .regular ? 40 : 12)

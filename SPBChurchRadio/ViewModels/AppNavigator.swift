@@ -8,8 +8,9 @@ class AppNavigator: ObservableObject {
     enum Tab: Int {
         case radio = 0
         case tracks = 1
-        case downloads = 2
-        case settings = 3
+        case favorites = 2
+        case downloads = 3
+        case settings = 4
     }
 
     func go(to tab: Tab) {
