@@ -227,27 +227,24 @@ struct TrackRow: View {
 
     private var trackThumbnail: some View {
         let thumbSize: CGFloat = isIPad ? 52 : 46
+        let cornerRadius: CGFloat = isIPad ? 12 : 10
         return ZStack {
-            ArtworkView(url: track.url, size: thumbSize, cornerRadius: isIPad ? 12 : 10)
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(AppColors.background)
+                .frame(width: thumbSize, height: thumbSize)
                 .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 4, x: 2, y: 2)
                 .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 4, x: -2, y: -2)
 
             if isCurrentTrack && radioPlayer.isFilePlaying {
-                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                    .fill(AppColors.background.opacity(0.6))
-                    .frame(width: thumbSize, height: thumbSize)
-
-                // Mini equalizer instead of static waveform icon
                 MiniEqualizerView(isPlaying: true, maxHeight: isIPad ? 18 : 14)
             } else if isCurrentTrack {
-                // Show paused indicator
-                RoundedRectangle(cornerRadius: isIPad ? 12 : 10, style: .continuous)
-                    .fill(AppColors.background.opacity(0.5))
-                    .frame(width: thumbSize, height: thumbSize)
-
                 Image(systemName: "pause.fill")
                     .font(.system(size: isIPad ? 16 : 14, weight: .medium))
                     .foregroundStyle(AppColors.accentAdaptive)
+            } else {
+                Image(systemName: "music.note")
+                    .font(.system(size: isIPad ? 18 : 16, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
         }
     }
