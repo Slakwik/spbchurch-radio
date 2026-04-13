@@ -133,7 +133,7 @@ struct SettingsView: View {
             linkRow(
                 title: "Церковь «Преображение»",
                 subtitle: "spbchurch.ru",
-                icon: "church.fill",
+                icon: "cross.fill",
                 url: URL(string: "https://spbchurch.ru/")!
             )
         }
