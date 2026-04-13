@@ -5,6 +5,7 @@ struct RadioView: View {
     @Environment(\.verticalSizeClass) private var vSizeClass
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
+    @State private var showNowPlaying = false
 
     private var isLandscape: Bool { vSizeClass == .compact }
     private var isIPad: Bool { hSizeClass == .regular && vSizeClass == .regular }
@@ -21,6 +22,10 @@ struct RadioView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            .fullScreenCover(isPresented: $showNowPlaying) {
+                NowPlayingView()
+                    .environmentObject(radioPlayer)
+            }
         }
     }
 
@@ -236,17 +241,30 @@ struct RadioView: View {
     private var filePlayerWidget: some View {
         if radioPlayer.activeMode == .file,
            let track = radioPlayer.filePlayer.currentTrack {
-            VStack(spacing: 4) {
-                Image(systemName: "music.note")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppColors.accentAdaptive)
-                Text(track.title)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
-                    .foregroundStyle(AppColors.textPrimary)
-                    .lineLimit(1)
+            Button(action: {
+                HapticManager.lightImpact()
+                showNowPlaying = true
+            }) {
+                VStack(spacing: 4) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "music.note")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(AppColors.accentAdaptive)
+                        Image(systemName: "chevron.up")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    Text(track.title)
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .lineLimit(1)
+                        .padding(.horizontal, 8)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: isIPad ? 80 : 65)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: isIPad ? 80 : 65)
+            .buttonStyle(NeumorphicButtonStyle())
             .neumorphicRaised(cornerRadius: 16)
         } else {
             VStack(spacing: 4) {
