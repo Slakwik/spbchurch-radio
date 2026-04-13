@@ -65,6 +65,7 @@ struct SettingsView: View {
         .neumorphicRaised(cornerRadius: 16)
     }
 
+    @ViewBuilder
     private func themeRow(mode: ThemeManager.ThemeMode) -> some View {
         Button(action: {
             HapticManager.selection()
