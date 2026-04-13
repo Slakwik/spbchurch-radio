@@ -68,7 +68,7 @@ struct ContentView: View {
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
-        .onChange(of: colorScheme) { _ in
+        .onChange(of: colorScheme) { _, _ in
             // Update tab bar when theme changes
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()

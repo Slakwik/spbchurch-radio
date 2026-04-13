@@ -37,8 +37,8 @@ struct AnimatedEqualizerView: View {
                 }
             }
         }
-        .onChange(of: isPlaying) { playing in
-            if !playing {
+        .onChange(of: isPlaying) { _, newValue in
+            if !newValue {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                     heights = Array(repeating: minHeight, count: barCount)
                 }

@@ -274,20 +274,18 @@ struct RadioView: View {
                 .shadow(color: AppColors.shadowDark, radius: 10, x: 6, y: 6)
                 .shadow(color: AppColors.shadowLight, radius: 10, x: -6, y: -6)
 
-            // Menu dots (top)
-            Button(action: {}) {
-                VStack(spacing: 3) {
-                    HStack(spacing: 3) {
-                        ForEach(0..<2, id: \.self) { _ in
-                            Circle().fill(AppColors.textPrimary.opacity(0.4))
-                                .frame(width: 4, height: 4)
-                        }
+            // Menu dots (top, decorative)
+            VStack(spacing: 3) {
+                HStack(spacing: 3) {
+                    ForEach(0..<2, id: \.self) { _ in
+                        Circle().fill(AppColors.textPrimary.opacity(0.4))
+                            .frame(width: 4, height: 4)
                     }
-                    HStack(spacing: 3) {
-                        ForEach(0..<2, id: \.self) { _ in
-                            Circle().fill(AppColors.textPrimary.opacity(0.4))
-                                .frame(width: 4, height: 4)
-                        }
+                }
+                HStack(spacing: 3) {
+                    ForEach(0..<2, id: \.self) { _ in
+                        Circle().fill(AppColors.textPrimary.opacity(0.4))
+                            .frame(width: 4, height: 4)
                     }
                 }
             }
@@ -344,7 +342,7 @@ struct RadioView: View {
 
             // Decorative dots (bottom right of wheel)
             VStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { row in
+                ForEach(0..<3, id: \.self) { _ in
                     HStack(spacing: 4) {
                         ForEach(0..<3, id: \.self) { _ in
                             Circle()

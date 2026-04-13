@@ -181,16 +181,17 @@ struct NowPlayingView: View {
                         .fill(AppGradients.accentGradient)
                         .frame(width: max(0, geo.size.width * progress), height: 4)
                 }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            let newProgress = max(0, min(1, value.location.x / geo.size.width))
+                            let newTime = newProgress * player.duration
+                            player.seek(to: newTime)
+                        }
+                )
             }
             .frame(height: 4)
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        let newProgress = max(0, min(1, value.location.x / (UIScreen.main.bounds.width - 72)))
-                        let newTime = newProgress * player.duration
-                        player.seek(to: newTime)
-                    }
-            )
 
             // Time labels
             HStack {

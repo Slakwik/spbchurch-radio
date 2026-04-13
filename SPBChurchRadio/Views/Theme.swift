@@ -89,7 +89,6 @@ extension Color {
 
 struct NeumorphicRaised: ViewModifier {
     var cornerRadius: CGFloat = 20
-    @Environment(\.colorScheme) private var colorScheme
 
     func body(content: Content) -> some View {
         content
