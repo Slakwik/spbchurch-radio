@@ -20,6 +20,9 @@ struct RadioView: View {
             ZStack {
                 AppColors.background.ignoresSafeArea()
 
+                // Tree as full-screen background — scaled to fill, clipped to bounds
+                treeBackground
+
                 if isLandscape {
                     landscapeLayout
                 } else {
@@ -33,7 +36,45 @@ struct RadioView: View {
                     .environmentObject(favoritesManager)
                     .environmentObject(downloadManager)
             }
+            .onAppear {
+                if radioPlayer.isRadioPlaying { startPulsing() }
+            }
+            .onChange(of: radioPlayer.isRadioPlaying) { _, playing in
+                if playing { startPulsing() } else { pulseScale = 1.0 }
+            }
         }
+    }
+
+    // MARK: - Tree Background
+
+    private var treeBackground: some View {
+        let isPlaying = radioPlayer.isRadioPlaying
+        return ZStack {
+            Image("TreeBackground")
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .opacity(isPlaying ? 0.75 : 0.20)
+                .animation(.easeInOut(duration: 1.2), value: isPlaying)
+
+            // Gold halo — appears only when playing
+            RadialGradient(
+                colors: [
+                    AppColors.accentAdaptive.opacity(isPlaying ? 0.35 : 0),
+                    AppColors.accentAdaptive.opacity(isPlaying ? 0.08 : 0),
+                    .clear
+                ],
+                center: .center,
+                startRadius: 80,
+                endRadius: 480
+            )
+            .blendMode(.plusLighter)
+            .allowsHitTesting(false)
+            .scaleEffect(pulseScale)
+            .animation(.easeInOut(duration: 1.2), value: isPlaying)
+        }
+        .ignoresSafeArea()
     }
 
     // MARK: - Portrait Layout
@@ -44,23 +85,17 @@ struct RadioView: View {
                 .padding(.top, isIPad ? 20 : 12)
                 .padding(.horizontal, 20)
 
-            Spacer(minLength: 14)
+            Spacer()
 
-            // Play/stop button
+            // Play/stop button — vertically centered, stable position
             playStopButton
-                .padding(.bottom, isIPad ? 28 : 20)
 
-            // Glowing tree
-            glowingTree
-                .padding(.horizontal, 30)
+            Spacer()
 
-            Spacer(minLength: 18)
-
-            // Track info + find button
+            // Track info + find button (fixed-height container)
             trackInfo
                 .padding(.horizontal, 24)
-
-            Spacer(minLength: 12)
+                .padding(.bottom, 14)
 
             // Live / file widget
             bottomStatus
@@ -73,12 +108,10 @@ struct RadioView: View {
 
     private var landscapeLayout: some View {
         HStack(spacing: 20) {
-            // Left: tree + play
-            VStack(spacing: 14) {
+            // Left: play button
+            VStack {
                 Spacer()
                 playStopButton
-                glowingTree
-                    .frame(maxWidth: 200)
                 Spacer()
             }
             .frame(maxWidth: .infinity)
@@ -121,51 +154,6 @@ struct RadioView: View {
             }
         }
         .padding(.horizontal, 4)
-    }
-
-    // MARK: - Glowing Tree
-
-    private var glowingTree: some View {
-        let treeSize: CGFloat = isIPad ? 320 : isLandscape ? 180 : 260
-        let isPlaying = radioPlayer.isRadioPlaying
-
-        return ZStack {
-            // Outer radial glow — visible only when playing
-            if isPlaying {
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                AppColors.accentAdaptive.opacity(0.55),
-                                AppColors.accentAdaptive.opacity(0.15),
-                                .clear
-                            ],
-                            center: .center,
-                            startRadius: treeSize * 0.15,
-                            endRadius: treeSize * 0.75
-                        )
-                    )
-                    .frame(width: treeSize * 1.4, height: treeSize * 1.4)
-                    .blur(radius: 20)
-                    .scaleEffect(pulseScale)
-                    .transition(.opacity)
-            }
-
-            // Tree image
-            Image("TreeBackground")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: treeSize, height: treeSize)
-                .shadow(color: isPlaying ? AppColors.accentAdaptive.opacity(0.7) : .clear, radius: 30)
-                .shadow(color: isPlaying ? AppColors.accentAdaptive.opacity(0.4) : .clear, radius: 60)
-                .animation(.easeInOut(duration: 1.2), value: isPlaying)
-        }
-        .onAppear {
-            if radioPlayer.isRadioPlaying { startPulsing() }
-        }
-        .onChange(of: radioPlayer.isRadioPlaying) { _, playing in
-            if playing { startPulsing() } else { pulseScale = 1.0 }
-        }
     }
 
     private func startPulsing() {
@@ -221,15 +209,18 @@ struct RadioView: View {
                 .foregroundStyle(AppColors.textPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
+                .frame(height: isIPad ? 52 : 46) // fixed height for 1-2 lines
 
             Text("SPBChurch Radio")
                 .font(.system(size: isIPad ? 15 : 13, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
 
-            if RadioTitle.isSearchable(radioPlayer.currentRadioTrack) {
-                findTrackButton
-                    .padding(.top, 4)
-            }
+            // Always reserve the space so the layout doesn't jump
+            findTrackButton
+                .padding(.top, 4)
+                .opacity(RadioTitle.isSearchable(radioPlayer.currentRadioTrack) ? 1 : 0)
+                .allowsHitTesting(RadioTitle.isSearchable(radioPlayer.currentRadioTrack))
+                .animation(.easeInOut(duration: 0.25), value: radioPlayer.currentRadioTrack)
         }
     }
 
