@@ -178,7 +178,7 @@ struct RadioView: View {
     // MARK: - Play / Stop Button
 
     private var playStopButton: some View {
-        let size: CGFloat = isIPad ? 84 : 72
+        let size: CGFloat = isIPad ? 108 : 96
         let isPlaying = radioPlayer.isRadioPlaying
 
         return Button(action: {
@@ -189,21 +189,25 @@ struct RadioView: View {
                 Circle()
                     .fill(AppColors.background)
                     .frame(width: size, height: size)
-                    .shadow(color: AppColors.shadowDark, radius: 10, x: 6, y: 6)
-                    .shadow(color: AppColors.shadowLight, radius: 10, x: -6, y: -6)
+                    .shadow(color: AppColors.shadowDark, radius: 12, x: 7, y: 7)
+                    .shadow(color: AppColors.shadowLight, radius: 12, x: -7, y: -7)
 
-                if isPlaying {
-                    Circle()
-                        .stroke(AppColors.accentAdaptive.opacity(0.5), lineWidth: 2)
-                        .frame(width: size - 8, height: size - 8)
-                }
+                // Gold outline — always visible, brighter when playing
+                Circle()
+                    .stroke(
+                        AppColors.accentAdaptive.opacity(isPlaying ? 0.7 : 0.35),
+                        lineWidth: 2
+                    )
+                    .frame(width: size - 10, height: size - 10)
+                    .animation(.easeInOut(duration: 0.3), value: isPlaying)
 
                 Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                    .font(.system(size: isIPad ? 30 : 26, weight: .medium))
+                    .font(.system(size: isIPad ? 40 : 34, weight: .medium))
                     .foregroundStyle(isPlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
-                    .offset(x: isPlaying ? 0 : 2)
+                    .frame(width: size, height: size)
                     .contentTransition(.symbolEffect(.replace))
             }
+            .frame(width: size, height: size)
         }
         .buttonStyle(NeumorphicButtonStyle())
     }
