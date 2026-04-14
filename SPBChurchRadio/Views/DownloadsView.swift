@@ -165,7 +165,7 @@ struct DownloadedTrackRow: View {
                     radioPlayer.toggleFilePause()
                 } else {
                     let localURL = downloadManager.localURL(for: track)
-                    radioPlayer.playFile(track, localURL: localURL)
+                    radioPlayer.playFile(track, localURL: localURL, queue: downloadManager.downloadedTracks)
                 }
             }) {
                 ZStack {

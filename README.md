@@ -113,6 +113,16 @@ Neumorphic палитра в стиле AirOS Music Player с поддержко
 
 ## История изменений
 
+### v3.9 — Контекстная очередь воспроизведения и heart в списке треков
+- **Фикс:** при воспроизведении из «Избранное» / «Загрузки» проигрывался только один трек — `playNext()` использовал `allTracks` (полный каталог), который без интернета был пуст. Теперь у `RadioPlayerViewModel` есть `@Published var playbackQueue`, который запоминает контекст старта воспроизведения
+- `playFile(_:localURL:queue:)` принимает опциональный `queue` — список для `next`/`prev`/автопродвижения
+- `activeQueue` предпочитает `playbackQueue`, но падает на `allTracks` как fallback (lock-screen команды после cold start)
+- Call sites обновлены:
+  - `TrackListView` → `queue: trackListVM.filteredTracks` (учитывает поиск и сортировку)
+  - `DownloadsView` → `queue: downloadManager.downloadedTracks`
+  - `FavoritesView` → `queue: favoritesManager.favorites`
+- В строках вкладки «Треки» (`TrackRow`) появилась heart-кнопка для добавления в избранное прямо из списка, без открытия плеера
+
 ### v3.8 — Руководство пользователя и чистое описание
 - В настройках появилась секция **«Помощь»** с полноэкранным руководством
 - `HelpView` описывает функции по разделам: Радио, Треки, Избранное, Загрузки, Плеер, Фон и управление

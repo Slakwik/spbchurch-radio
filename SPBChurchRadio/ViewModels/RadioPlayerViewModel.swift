@@ -6,8 +6,14 @@ class RadioPlayerViewModel: ObservableObject {
     @Published var filePlayer = FilePlayerService()
     @Published var activeMode: PlaybackMode = .none
 
-    /// The full track list — set by TrackListViewModel for shuffle/next
+    /// The full track catalog — set by TrackListViewModel. Used as a fallback
+    /// queue when the caller doesn't provide an explicit one.
     var allTracks: [Track] = []
+
+    /// The active playback queue — whatever list the user started playback
+    /// from (Tracks, Favorites, Downloads, filtered search, etc.). Used by
+    /// next/previous/auto-advance so playback stays within that context.
+    @Published var playbackQueue: [Track] = []
 
     enum PlaybackMode {
         case none
@@ -47,9 +53,12 @@ class RadioPlayerViewModel: ObservableObject {
         activeMode = radioService.isPlaying ? .radio : .none
     }
 
-    func playFile(_ track: Track, localURL: URL? = nil) {
+    func playFile(_ track: Track, localURL: URL? = nil, queue: [Track]? = nil) {
         if activeMode == .radio {
             radioService.stop()
+        }
+        if let queue = queue, !queue.isEmpty {
+            playbackQueue = queue
         }
         filePlayer.play(track: track, localURL: localURL)
         activeMode = .file
@@ -70,40 +79,50 @@ class RadioPlayerViewModel: ObservableObject {
 
     // MARK: - Next / Previous
 
+    /// The list used for navigation. Prefer the explicit playbackQueue; fall
+    /// back to the full catalog so old behavior still works when nothing is
+    /// set yet (e.g. lock-screen commands after a cold start).
+    private var activeQueue: [Track] {
+        !playbackQueue.isEmpty ? playbackQueue : allTracks
+    }
+
     func playNext() {
-        guard !allTracks.isEmpty else { return }
+        let list = activeQueue
+        guard !list.isEmpty else { return }
 
         if filePlayer.shuffle {
-            // Random track, avoiding the current one
-            let candidates = allTracks.filter { $0.url != filePlayer.currentTrack?.url }
-            guard let next = candidates.randomElement() ?? allTracks.randomElement() else { return }
+            let candidates = list.filter { $0.url != filePlayer.currentTrack?.url }
+            guard let next = candidates.randomElement() ?? list.randomElement() else { return }
             let localURL = downloadManager?.localURL(for: next)
             playFile(next, localURL: localURL)
         } else {
-            // Sequential: play the next track in the list
             if let current = filePlayer.currentTrack,
-               let idx = allTracks.firstIndex(where: { $0.url == current.url }) {
-                let nextIdx = (idx + 1) % allTracks.count
-                let next = allTracks[nextIdx]
+               let idx = list.firstIndex(where: { $0.url == current.url }) {
+                let nextIdx = (idx + 1) % list.count
+                let next = list[nextIdx]
                 let localURL = downloadManager?.localURL(for: next)
                 playFile(next, localURL: localURL)
+            } else if let first = list.first {
+                // Current track isn't in the queue — start from the top.
+                let localURL = downloadManager?.localURL(for: first)
+                playFile(first, localURL: localURL)
             }
         }
     }
 
     func playPrevious() {
-        guard !allTracks.isEmpty else { return }
+        let list = activeQueue
+        guard !list.isEmpty else { return }
 
-        // If more than 3 seconds in, restart current track
         if filePlayer.currentTime > 3 {
             filePlayer.seek(to: 0)
             return
         }
 
         if let current = filePlayer.currentTrack,
-           let idx = allTracks.firstIndex(where: { $0.url == current.url }) {
-            let prevIdx = idx > 0 ? idx - 1 : allTracks.count - 1
-            let prev = allTracks[prevIdx]
+           let idx = list.firstIndex(where: { $0.url == current.url }) {
+            let prevIdx = idx > 0 ? idx - 1 : list.count - 1
+            let prev = list[prevIdx]
             let localURL = downloadManager?.localURL(for: prev)
             playFile(prev, localURL: localURL)
         }

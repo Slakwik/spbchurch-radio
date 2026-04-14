@@ -171,8 +171,14 @@ struct TrackRow: View {
     let track: Track
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
+    @EnvironmentObject var trackListVM: TrackListViewModel
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
+
+    private var isFavorite: Bool {
+        favoritesManager.isFavorite(track)
+    }
 
     private var isCurrentTrack: Bool {
         radioPlayer.filePlayer.currentTrack?.url == track.url
@@ -207,7 +213,8 @@ struct TrackRow: View {
 
             Spacer(minLength: 4)
 
-            HStack(spacing: isIPad ? 20 : 16) {
+            HStack(spacing: isIPad ? 18 : 14) {
+                favoriteButton
                 downloadButton
                 playButton
             }
@@ -247,6 +254,20 @@ struct TrackRow: View {
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
         }
+    }
+
+    private var favoriteButton: some View {
+        Button(action: {
+            HapticManager.lightImpact()
+            favoritesManager.toggle(track)
+        }) {
+            Image(systemName: isFavorite ? "heart.fill" : "heart")
+                .font(.system(size: isIPad ? 20 : 17, weight: .medium))
+                .foregroundStyle(isFavorite ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.6))
+                .symbolEffect(.bounce, value: isFavorite)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -321,7 +342,7 @@ struct TrackRow: View {
             radioPlayer.toggleFilePause()
         } else {
             let localURL = downloadManager.localURL(for: track)
-            radioPlayer.playFile(track, localURL: localURL)
+            radioPlayer.playFile(track, localURL: localURL, queue: trackListVM.filteredTracks)
         }
     }
 }
