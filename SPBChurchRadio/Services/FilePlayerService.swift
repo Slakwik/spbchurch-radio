@@ -3,6 +3,42 @@ import AVFoundation
 import MediaPlayer
 import Combine
 
+/// How the player picks the next track after the current one finishes.
+enum PlaybackOrder: String, CaseIterable, Identifiable {
+    /// Random track from the current queue.
+    case shuffle
+    /// Sequential, wrapping at the end of the queue.
+    case repeatAll
+    /// Sequential, stop after the last track in the queue.
+    case playOnce
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .shuffle:    return "Микс"
+        case .repeatAll:  return "Повтор"
+        case .playOnce:   return "До конца"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .shuffle:    return "shuffle"
+        case .repeatAll:  return "repeat"
+        case .playOnce:   return "arrow.right.to.line"
+        }
+    }
+
+    var next: PlaybackOrder {
+        switch self {
+        case .shuffle:   return .repeatAll
+        case .repeatAll: return .playOnce
+        case .playOnce:  return .shuffle
+        }
+    }
+}
+
 class FilePlayerService: ObservableObject {
     private var player: AVPlayer?
     private var timeObserver: Any?
@@ -12,7 +48,20 @@ class FilePlayerService: ObservableObject {
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
     @Published var isLoading = false
-    @Published var shuffle = true
+    @Published var order: PlaybackOrder = {
+        let saved = UserDefaults.standard.string(forKey: "playback_order") ?? PlaybackOrder.shuffle.rawValue
+        return PlaybackOrder(rawValue: saved) ?? .shuffle
+    }() {
+        didSet {
+            UserDefaults.standard.set(order.rawValue, forKey: "playback_order")
+        }
+    }
+
+    /// Backwards-compat accessor — true when `order == .shuffle`.
+    var shuffle: Bool {
+        get { order == .shuffle }
+        set { order = newValue ? .shuffle : .repeatAll }
+    }
 
     /// Called when a track finishes — the ViewModel uses this to auto-play next
     var onTrackFinished: (() -> Void)?

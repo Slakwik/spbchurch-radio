@@ -39,9 +39,31 @@ class RadioPlayerViewModel: ObservableObject {
             self?.objectWillChange.send()
         }.store(in: &cancellables)
 
-        // Auto-play next track when current finishes
+        // Auto-advance when the current track finishes
         filePlayer.onTrackFinished = { [weak self] in
-            self?.playNext()
+            self?.autoAdvance()
+        }
+    }
+
+    /// Called automatically when a track finishes playing.
+    /// Honors `playOnce` by stopping at the end of the queue instead of wrapping.
+    private func autoAdvance() {
+        let list = activeQueue
+        guard !list.isEmpty else { return }
+
+        switch filePlayer.order {
+        case .shuffle, .repeatAll:
+            playNext()
+        case .playOnce:
+            // If the current track is the last one in the queue, stop.
+            if let current = filePlayer.currentTrack,
+               let idx = list.firstIndex(where: { $0.url == current.url }),
+               idx == list.count - 1 {
+                filePlayer.stop()
+                activeMode = .none
+            } else {
+                playNext()
+            }
         }
     }
 

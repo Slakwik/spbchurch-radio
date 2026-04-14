@@ -368,11 +368,12 @@ struct FileNowPlayingBar: View {
 
             Button(action: {
                 HapticManager.selection()
-                radioPlayer.filePlayer.shuffle.toggle()
+                radioPlayer.filePlayer.order = radioPlayer.filePlayer.order.next
             }) {
-                Image(systemName: "shuffle")
+                Image(systemName: radioPlayer.filePlayer.order.iconName)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(radioPlayer.filePlayer.shuffle ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.3))
+                    .foregroundColor(AppColors.accentAdaptive)
+                    .contentTransition(.symbolEffect(.replace))
             }
 
             Button(action: {

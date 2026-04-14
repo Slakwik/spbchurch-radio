@@ -307,16 +307,17 @@ struct NowPlayingView: View {
         HStack(spacing: 14) {
             // Speed widget
             VStack(spacing: 12) {
-                // Shuffle toggle
+                // Playback order toggle — cycles shuffle → repeatAll → playOnce
                 Button(action: {
                     HapticManager.selection()
-                    player.shuffle.toggle()
+                    player.order = player.order.next
                 }) {
                     VStack(spacing: 4) {
-                        Image(systemName: "shuffle")
+                        Image(systemName: player.order.iconName)
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(player.shuffle ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.4))
-                        Text(player.shuffle ? "Микс" : "x1")
+                            .foregroundStyle(AppColors.accentAdaptive)
+                            .contentTransition(.symbolEffect(.replace))
+                        Text(player.order.displayName)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(AppColors.textSecondary)
                     }
