@@ -253,7 +253,7 @@ struct SettingsView: View {
                     Text("SPBChurch Radio")
                         .font(.system(size: isIPad ? 17 : 15, weight: .semibold))
                         .foregroundStyle(AppColors.textPrimary)
-                    Text("Версия 3.8")
+                    Text("Версия 3.12")
                         .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
@@ -380,7 +380,7 @@ private struct AboutAppView: View {
                 .font(.system(size: isIPad ? 24 : 20, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("Версия 3.8")
+            Text("Версия 3.12")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
@@ -516,10 +516,11 @@ private struct HelpView: View {
                             title: "Радио",
                             icon: "antenna.radiowaves.left.and.right",
                             items: [
-                                HelpItem(icon: "play.fill", text: "Нажмите центральную кнопку iPod-колеса, чтобы запустить прямой эфир."),
-                                HelpItem(icon: "waveform", text: "Пока идёт эфир, под обложкой отображается название текущего трека и анимированный эквалайзер."),
-                                HelpItem(icon: "magnifyingglass", text: "Кнопка «Найти в библиотеке» ищет играющий трек в каталоге по очищенному названию."),
-                                HelpItem(icon: "chevron.up", text: "Виджет текущего файла открывает полноэкранный плеер при нажатии.")
+                                HelpItem(icon: "play.circle.fill", text: "Нажмите большую круглую кнопку в центре экрана, чтобы запустить прямой эфир. Повторное нажатие — остановка."),
+                                HelpItem(icon: "tree.fill", text: "Когда идёт эфир, иллюстрация дерева светится золотом — это визуальный индикатор живого потока."),
+                                HelpItem(icon: "waveform", text: "Под кнопкой отображается название текущего трека из метаданных станции."),
+                                HelpItem(icon: "magnifyingglass", text: "Кнопка «Найти в библиотеке» переключает на вкладку «Треки» и подставляет название играющего трека в поиск."),
+                                HelpItem(icon: "chevron.up", text: "Карточка играющего файла внизу открывает полноэкранный плеер при нажатии.")
                             ]
                         )
 
@@ -529,8 +530,10 @@ private struct HelpView: View {
                             items: [
                                 HelpItem(icon: "magnifyingglass", text: "Поиск фильтрует каталог по названию в реальном времени."),
                                 HelpItem(icon: "arrow.up.arrow.down.circle", text: "Меню сортировки в правом углу: по умолчанию, А–Я, Я–А. Выбор сохраняется."),
-                                HelpItem(icon: "arrow.down.circle", text: "Нажмите на стрелку, чтобы загрузить трек для офлайн-прослушивания."),
-                                HelpItem(icon: "play.circle", text: "Нажмите круглую кнопку play, чтобы начать воспроизведение.")
+                                HelpItem(icon: "heart", text: "Сердечко в строке трека добавляет его в избранное одним тапом."),
+                                HelpItem(icon: "arrow.down.circle", text: "Стрелка загружает трек в офлайн; круговой прогресс показывает ход загрузки и останавливается по тапу."),
+                                HelpItem(icon: "play.circle", text: "Круглая кнопка play запускает воспроизведение — очередь уважает текущий порядок сортировки и поиска."),
+                                HelpItem(icon: "hand.tap", text: "Долгий тап открывает контекстное меню с действиями «Поделиться» и «Избранное».")
                             ]
                         )
 
@@ -538,9 +541,10 @@ private struct HelpView: View {
                             title: "Избранное",
                             icon: "heart.fill",
                             items: [
-                                HelpItem(icon: "heart", text: "Добавляйте треки в избранное через кнопку ♡ на экране плеера."),
-                                HelpItem(icon: "arrow.up.arrow.down", text: "В режиме редактирования можно менять порядок и удалять свайпом."),
-                                HelpItem(icon: "tray.full", text: "Список хранится локально и не зависит от интернета.")
+                                HelpItem(icon: "heart", text: "Добавить трек: нажмите ♡ в строке во вкладке «Треки» или из «Действий» на экране плеера."),
+                                HelpItem(icon: "arrow.down.circle", text: "Скачивать и делиться треками можно прямо из избранного — кнопки встроены в строку."),
+                                HelpItem(icon: "arrow.up.arrow.down", text: "Кнопка «Изменить» в toolbar включает reorder и swipe-to-delete."),
+                                HelpItem(icon: "tray.full", text: "Список хранится локально (`favorites.json`) и работает без интернета.")
                             ]
                         )
 
@@ -548,8 +552,9 @@ private struct HelpView: View {
                             title: "Загрузки",
                             icon: "arrow.down.circle.fill",
                             items: [
-                                HelpItem(icon: "wifi.slash", text: "Загруженные треки доступны без интернета и сохраняются между запусками."),
-                                HelpItem(icon: "trash", text: "Удалить трек с устройства — кнопка корзины в строке или свайп."),
+                                HelpItem(icon: "wifi.slash", text: "Загруженные треки доступны без интернета и сохраняются между запусками — список не зависит от каталога."),
+                                HelpItem(icon: "square.and.arrow.up", text: "Кнопка Share в каждой строке открывает стандартный share-sheet с MP3 файлом (AirDrop, Messages, Files и т.д.)."),
+                                HelpItem(icon: "trash", text: "Удалить трек с устройства — иконка корзины в строке или свайп."),
                                 HelpItem(icon: "internaldrive", text: "Каждый трек хранится по хэшу URL — дубликаты исключены.")
                             ]
                         )
@@ -558,21 +563,21 @@ private struct HelpView: View {
                             title: "Плеер",
                             icon: "play.circle.fill",
                             items: [
-                                HelpItem(icon: "heart", text: "♡ добавляет текущий трек в избранное."),
-                                HelpItem(icon: "arrow.down.circle", text: "Стрелка вниз скачивает трек в офлайн; зелёная галочка — уже загружен."),
-                                HelpItem(icon: "shuffle", text: "Переключение между «Микс» (случайный порядок) и «По порядку»."),
-                                HelpItem(icon: "backward.fill", text: "Прокрутка вперёд/назад через iPod-колесо."),
-                                HelpItem(icon: "slider.horizontal.below.rectangle", text: "Слайдер прогресса можно тянуть для перемотки трека.")
+                                HelpItem(icon: "line.3.horizontal", text: "Левый нижний виджет «Действия» — меню с добавлением в избранное, скачиванием и кнопкой «Поделиться файлом»."),
+                                HelpItem(icon: "shuffle", text: "Правый виджет переключает порядок воспроизведения: Микс (случайный), Повтор (зацикливание), До конца (остановка после последнего трека). Выбор сохраняется."),
+                                HelpItem(icon: "slider.horizontal.below.rectangle", text: "Слайдер прогресса над iPod-колесом можно тянуть для перемотки."),
+                                HelpItem(icon: "backward.fill", text: "Стрелки вперёд/назад на колесе переключают треки в пределах текущего плейлиста (очередь запоминает, откуда стартовало воспроизведение)."),
+                                HelpItem(icon: "chevron.down", text: "Chevron вверху закрывает плеер — воспроизведение продолжается, а под списками появляется мини-плеер.")
                             ]
                         )
 
                         helpSection(
-                            title: "Фон и управление",
-                            icon: "speaker.wave.2.fill",
+                            title: "Настройки и фон",
+                            icon: "gearshape.fill",
                             items: [
+                                HelpItem(icon: "moon.fill", text: "Тема приложения: системная / светлая / тёмная — переключается в «Настройки › Оформление»."),
                                 HelpItem(icon: "lock.fill", text: "Приложение продолжает играть при блокировке экрана."),
                                 HelpItem(icon: "applewatch", text: "Управление с Lock Screen, Control Center и совместимых наушников."),
-                                HelpItem(icon: "moon.fill", text: "Поддерживаются светлая и тёмная темы — меняются в «Настройках»."),
                                 HelpItem(icon: "ipad.and.iphone", text: "Адаптивный макет для iPhone и iPad во всех ориентациях.")
                             ]
                         )

@@ -113,6 +113,19 @@ Neumorphic палитра в стиле AirOS Music Player с поддержко
 
 ## История изменений
 
+### v3.12 — Большая кнопка эфира, action-меню в плеере, трёхрежимный порядок
+- **Кнопка play/stop радио** увеличена в 1.5× (144pt iPhone / 162pt iPad), золотая обводка теперь всегда видна — в покое 35% opacity, в эфире 70%. Иконка стабильно центрирована в круге, не съезжает при смене состояния
+- **Фон экрана радио** — дерево рендерится во весь экран как `.background` слой (`GeometryReader` + `aspectRatio(.fill)` + `.clipped()`); при эфире opacity поднимается до 0.75 и поверх ложится золотой `RadialGradient` halo с `.plusLighter` blendMode
+- **Layout стабильный** — контент разделён на content + background слои (`.background(backgroundLayer)`), `NavigationStack`-обёртка убрана, `stationHeader` имеет `lineLimit(1) + minimumScaleFactor`. Проверено от iPhone SE (Display Zoom 320×568) до iPhone 16 Pro Max
+- **Избранное получило скачивание и share inline**: в `FavoriteTrackRow` добавлена `downloadControl` (те же три состояния, что и в «Треках») и `ShareLink` рядом с heart-кнопкой для уже скачанных треков
+- **Трёхрежимный порядок воспроизведения**: кнопка shuffle превратилась в цикл `shuffle → repeatAll → playOnce`:
+  - `Микс` — случайный следующий трек из очереди
+  - `Повтор` — по порядку, зацикливается после последнего
+  - `До конца` — по порядку, останавливается после последнего
+  - Сохраняется в `UserDefaults` (`playback_order`). Авто-продвижение (`RadioPlayerViewModel.autoAdvance()`) уважает `.playOnce` и делает stop в конце плейлиста
+- **Action-меню в плеере**: вместо виджета времени в `bottomControls.NowPlayingView` теперь `Menu` «Действия» с контекстными пунктами: добавить/убрать из избранного, скачать / отменить / удалить загрузку, поделиться файлом (через `ShareLink` с `SharePreview`). Время трека всё равно видно под seek-slider'ом
+- **Header плеера** очищен: убраны heart, download и share — оставлены только заголовок «Музыка», мини-эквалайзер и chevron.down
+
 ### v3.11 — Редизайн экрана «Радио»
 - Убран iPod click wheel и точечное кольцо вокруг обложки
 - Кнопка play/stop теперь одиночный neumorphic круг **над деревом**, а не часть колеса
