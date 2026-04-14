@@ -179,6 +179,19 @@ private struct FavoriteTrackRow: View {
             }
         )
         .animation(.easeInOut(duration: 0.3), value: isCurrentTrack)
+        .contextMenu {
+            if let localURL = downloadManager.localURL(for: track) {
+                ShareLink(
+                    item: localURL,
+                    preview: SharePreview(track.title, image: Image(systemName: "music.note"))
+                ) {
+                    Label("Поделиться файлом", systemImage: "square.and.arrow.up")
+                }
+            }
+            Button(role: .destructive, action: { favoritesManager.remove(track) }) {
+                Label("Убрать из избранного", systemImage: "heart.slash")
+            }
+        }
     }
 
     private var thumbnail: some View {

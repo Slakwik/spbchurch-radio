@@ -148,6 +148,19 @@ struct DownloadedTrackRow: View {
 
             Spacer()
 
+            // Share button
+            if let localURL = downloadManager.localURL(for: track) {
+                ShareLink(
+                    item: localURL,
+                    preview: SharePreview(track.title, image: Image(systemName: "music.note"))
+                ) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: isIPad ? 16 : 14, weight: .medium))
+                        .foregroundStyle(AppColors.accentAdaptive.opacity(0.8))
+                }
+                .simultaneousGesture(TapGesture().onEnded { HapticManager.lightImpact() })
+            }
+
             // Delete button
             Button(action: {
                 HapticManager.lightImpact()

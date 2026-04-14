@@ -230,6 +230,22 @@ struct TrackRow: View {
             }
         )
         .animation(.easeInOut(duration: 0.3), value: isCurrentTrack)
+        .contextMenu {
+            if let localURL = downloadManager.localURL(for: track) {
+                ShareLink(
+                    item: localURL,
+                    preview: SharePreview(track.title, image: Image(systemName: "music.note"))
+                ) {
+                    Label("Поделиться файлом", systemImage: "square.and.arrow.up")
+                }
+            }
+            Button(action: { favoritesManager.toggle(track) }) {
+                Label(
+                    isFavorite ? "Убрать из избранного" : "Добавить в избранное",
+                    systemImage: isFavorite ? "heart.slash" : "heart"
+                )
+            }
+        }
     }
 
     private var trackThumbnail: some View {

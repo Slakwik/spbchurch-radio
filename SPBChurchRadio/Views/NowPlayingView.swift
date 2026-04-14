@@ -101,6 +101,9 @@ struct NowPlayingView: View {
             // Mini equalizer in header
             MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
 
+            // Share (only when downloaded)
+            shareButton
+
             // Download toggle
             downloadButton
 
@@ -139,6 +142,28 @@ struct NowPlayingView: View {
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
+        }
+    }
+
+    // MARK: - Share Button
+
+    @ViewBuilder
+    private var shareButton: some View {
+        if let track = player.currentTrack,
+           let localURL = downloadManager.localURL(for: track) {
+            ShareLink(
+                item: localURL,
+                preview: SharePreview(track.title, image: Image(systemName: "music.note"))
+            ) {
+                Image(systemName: "square.and.arrow.up")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppColors.accentAdaptive)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .simultaneousGesture(TapGesture().onEnded {
+                HapticManager.lightImpact()
+            })
         }
     }
 
