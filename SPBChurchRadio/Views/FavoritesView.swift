@@ -139,6 +139,9 @@ private struct FavoriteTrackRow: View {
 
             Spacer(minLength: 4)
 
+            // Download button (or progress / downloaded state)
+            downloadControl
+
             // Share button (only when downloaded)
             if let localURL = downloadManager.localURL(for: track) {
                 ShareLink(
@@ -204,6 +207,53 @@ private struct FavoriteTrackRow: View {
             Button(role: .destructive, action: { favoritesManager.remove(track) }) {
                 Label("Убрать из избранного", systemImage: "heart.slash")
             }
+        }
+    }
+
+    @ViewBuilder
+    private var downloadControl: some View {
+        let iconSize: CGFloat = isIPad ? 20 : 18
+        if isDownloaded {
+            Image(systemName: "arrow.down.circle.fill")
+                .font(.system(size: iconSize))
+                .foregroundStyle(AppColors.textSecondary.opacity(0.6))
+                .symbolRenderingMode(.hierarchical)
+        } else if let state = downloadManager.downloads[track.url] {
+            switch state {
+            case .downloading(let progress):
+                CircularProgressView(progress: progress)
+                    .frame(width: iconSize, height: iconSize)
+                    .onTapGesture {
+                        HapticManager.lightImpact()
+                        downloadManager.cancelDownload(track)
+                    }
+            case .completed:
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.6))
+                    .symbolRenderingMode(.hierarchical)
+            case .failed:
+                Button(action: {
+                    HapticManager.lightImpact()
+                    downloadManager.download(track)
+                }) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(AppColors.error)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+            }
+        } else {
+            Button(action: {
+                HapticManager.lightImpact()
+                downloadManager.download(track)
+            }) {
+                Image(systemName: "arrow.down.circle")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .buttonStyle(.plain)
         }
     }
 
