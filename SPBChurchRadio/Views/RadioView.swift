@@ -16,32 +16,30 @@ struct RadioView: View {
     private var isIPad: Bool { hSizeClass == .regular && vSizeClass == .regular }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColors.background.ignoresSafeArea()
+        ZStack {
+            AppColors.background.ignoresSafeArea()
 
-                // Tree as full-screen background — scaled to fill, clipped to bounds
-                treeBackground
+            // Tree as full-screen background — scaled to fill, clipped to bounds
+            treeBackground
 
-                if isLandscape {
-                    landscapeLayout
-                } else {
-                    portraitLayout
-                }
+            if isLandscape {
+                landscapeLayout
+            } else {
+                portraitLayout
             }
-            .toolbar(.hidden, for: .navigationBar)
-            .fullScreenCover(isPresented: $showNowPlaying) {
-                NowPlayingView()
-                    .environmentObject(radioPlayer)
-                    .environmentObject(favoritesManager)
-                    .environmentObject(downloadManager)
-            }
-            .onAppear {
-                if radioPlayer.isRadioPlaying { startPulsing() }
-            }
-            .onChange(of: radioPlayer.isRadioPlaying) { _, playing in
-                if playing { startPulsing() } else { pulseScale = 1.0 }
-            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .fullScreenCover(isPresented: $showNowPlaying) {
+            NowPlayingView()
+                .environmentObject(radioPlayer)
+                .environmentObject(favoritesManager)
+                .environmentObject(downloadManager)
+        }
+        .onAppear {
+            if radioPlayer.isRadioPlaying { startPulsing() }
+        }
+        .onChange(of: radioPlayer.isRadioPlaying) { _, playing in
+            if playing { startPulsing() } else { pulseScale = 1.0 }
         }
     }
 
@@ -83,25 +81,24 @@ struct RadioView: View {
         VStack(spacing: 0) {
             stationHeader
                 .padding(.top, isIPad ? 20 : 12)
-                .padding(.horizontal, 20)
 
-            Spacer()
+            Spacer(minLength: 20)
 
             // Play/stop button — vertically centered, stable position
             playStopButton
 
-            Spacer()
+            Spacer(minLength: 20)
 
             // Track info + find button (fixed-height container)
             trackInfo
-                .padding(.horizontal, 24)
                 .padding(.bottom, 14)
 
             // Live / file widget
             bottomStatus
-                .padding(.horizontal, 24)
-                .padding(.bottom, isIPad ? 30 : 20)
+                .padding(.bottom, isIPad ? 20 : 12)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, isIPad ? 28 : 20)
     }
 
     // MARK: - Landscape Layout
@@ -126,34 +123,38 @@ struct RadioView: View {
                 Spacer()
             }
             .frame(maxWidth: .infinity)
-            .padding(.trailing, 16)
         }
-        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 20)
         .padding(.vertical, 8)
     }
 
     // MARK: - Station Header
 
     private var stationHeader: some View {
-        HStack {
+        HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Радио")
                     .font(.system(size: isIPad ? 36 : 28, weight: .bold))
                     .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
                 Text("SPBChurch")
                     .font(.system(size: isIPad ? 14 : 12, weight: .medium))
                     .foregroundStyle(AppColors.accentAdaptive)
+                    .lineLimit(1)
             }
-            Spacer()
+            Spacer(minLength: 0)
 
             // Equalizer in header when playing
             if radioPlayer.isRadioPlaying {
                 LargeEqualizerView(isPlaying: true)
-                    .frame(height: 36)
+                    .frame(height: 32)
+                    .layoutPriority(0)
             }
         }
-        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
     }
 
     private func startPulsing() {
