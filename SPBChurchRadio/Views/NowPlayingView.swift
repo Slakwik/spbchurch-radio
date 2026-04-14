@@ -101,15 +101,6 @@ struct NowPlayingView: View {
             // Mini equalizer in header
             MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
 
-            // Share (only when downloaded)
-            shareButton
-
-            // Download toggle
-            downloadButton
-
-            // Favorite toggle
-            favoriteButton
-
             Button(action: {
                 HapticManager.lightImpact()
                 dismiss()
@@ -125,85 +116,75 @@ struct NowPlayingView: View {
         .padding(.top, isLandscape ? 8 : 12)
     }
 
-    // MARK: - Favorite Button
+    // MARK: - Track Actions Menu (replaces time-display widget)
 
     @ViewBuilder
-    private var favoriteButton: some View {
+    private var trackActionsMenu: some View {
         if let track = player.currentTrack {
             let isFav = favoritesManager.isFavorite(track)
-            Button(action: {
-                HapticManager.mediumImpact()
-                favoritesManager.toggle(track)
-            }) {
-                Image(systemName: isFav ? "heart.fill" : "heart")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(isFav ? AppColors.accentAdaptive : AppColors.textSecondary)
-                    .symbolEffect(.bounce, value: isFav)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-        }
-    }
+            let localURL = downloadManager.localURL(for: track)
+            let isDownloaded = localURL != nil
+            let isDownloading: Bool = {
+                if case .downloading = downloadManager.downloads[track.url] { return true }
+                return false
+            }()
 
-    // MARK: - Share Button
+            Menu {
+                Button(action: {
+                    HapticManager.lightImpact()
+                    favoritesManager.toggle(track)
+                }) {
+                    Label(
+                        isFav ? "Убрать из избранного" : "Добавить в избранное",
+                        systemImage: isFav ? "heart.slash" : "heart"
+                    )
+                }
 
-    @ViewBuilder
-    private var shareButton: some View {
-        if let track = player.currentTrack,
-           let localURL = downloadManager.localURL(for: track) {
-            ShareLink(
-                item: localURL,
-                preview: SharePreview(track.title, image: Image(systemName: "music.note"))
-            ) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppColors.accentAdaptive)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
-            }
-            .simultaneousGesture(TapGesture().onEnded {
-                HapticManager.lightImpact()
-            })
-        }
-    }
+                if isDownloaded, let url = localURL {
+                    ShareLink(
+                        item: url,
+                        preview: SharePreview(track.title, image: Image(systemName: "music.note"))
+                    ) {
+                        Label("Поделиться файлом", systemImage: "square.and.arrow.up")
+                    }
 
-    // MARK: - Download Button
-
-    @ViewBuilder
-    private var downloadButton: some View {
-        if let track = player.currentTrack {
-            if downloadManager.isDownloaded(track) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(AppColors.success)
-                    .symbolRenderingMode(.hierarchical)
-                    .frame(width: 44, height: 44)
-            } else if case .downloading(let progress) = downloadManager.downloads[track.url] {
-                ZStack {
-                    CircularProgressView(progress: progress)
-                        .frame(width: 20, height: 20)
-                    Image(systemName: "stop.fill")
-                        .font(.system(size: 8, weight: .bold))
+                    Button(role: .destructive, action: {
+                        HapticManager.lightImpact()
+                        downloadManager.deleteDownload(track)
+                    }) {
+                        Label("Удалить загрузку", systemImage: "trash")
+                    }
+                } else if isDownloading {
+                    Button(action: {
+                        HapticManager.lightImpact()
+                        downloadManager.cancelDownload(track)
+                    }) {
+                        Label("Отменить загрузку", systemImage: "xmark.circle")
+                    }
+                } else {
+                    Button(action: {
+                        HapticManager.mediumImpact()
+                        downloadManager.download(track)
+                    }) {
+                        Label("Скачать трек", systemImage: "arrow.down.circle")
+                    }
+                }
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "line.3.horizontal")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                    Text("Действия")
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(AppColors.textSecondary)
                 }
-                .frame(width: 44, height: 44)
+                .frame(maxWidth: .infinity)
+                .frame(height: 65)
                 .contentShape(Rectangle())
-                .onTapGesture {
-                    HapticManager.lightImpact()
-                    downloadManager.cancelDownload(track)
-                }
-            } else {
-                Button(action: {
-                    HapticManager.mediumImpact()
-                    downloadManager.download(track)
-                }) {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppColors.accentAdaptive)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
-                }
             }
+            .buttonStyle(.plain)
+            .neumorphicRaised(cornerRadius: 16)
+            .simultaneousGesture(TapGesture().onEnded { HapticManager.lightImpact() })
         }
     }
 
@@ -326,18 +307,8 @@ struct NowPlayingView: View {
                 .frame(height: 65)
                 .neumorphicRaised(cornerRadius: 16)
 
-                // Time display
-                VStack(spacing: 2) {
-                    Text(formatTime(player.currentTime))
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundStyle(AppColors.textPrimary)
-                    Text(formatTime(player.duration))
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundStyle(AppColors.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 65)
-                .neumorphicRaised(cornerRadius: 16)
+                // Track actions menu (replaces the old time-display widget)
+                trackActionsMenu
             }
             .frame(maxWidth: .infinity)
 
