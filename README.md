@@ -17,18 +17,34 @@ iOS-приложение для интернет-радиостанции цер
 ## Скриншоты
 
 <p align="center">
-  <img src="screenshots/radio.png" width="250" alt="Радио">
-  &nbsp;&nbsp;
-  <img src="screenshots/tracks.png" width="250" alt="Треки">
-  &nbsp;&nbsp;
-  <img src="screenshots/downloads.png" width="250" alt="Загрузки">
+  <img src="screenshots/radio.png" width="220" alt="Радио">
+  &nbsp;
+  <img src="screenshots/tracks.png" width="220" alt="Треки">
+  &nbsp;
+  <img src="screenshots/favorites.png" width="220" alt="Избранное">
+</p>
+
+<p align="center">
+  <img src="screenshots/player.png" width="220" alt="Плеер">
+  &nbsp;
+  <img src="screenshots/downloads.png" width="220" alt="Загрузки">
+  &nbsp;
+  <img src="screenshots/settings.png" width="220" alt="Настройки">
+</p>
+
+<p align="center">
+  <img src="screenshots/help.png" width="220" alt="Помощь">
 </p>
 
 | Экран | Описание |
 |-------|----------|
-| **Радио** | Neumorphic плеер с точечным кольцом прогресса, iPod click wheel, frosted artwork |
-| **Треки** | Каталог 2000+ треков с neumorphic кнопками, поиском и мини-плеером |
-| **Загрузки** | Офлайн-библиотека с объёмными карточками |
+| **Радио** | Neumorphic плеер с точечным кольцом прогресса, iPod click wheel, frosted artwork, кнопка «Найти в библиотеке» |
+| **Треки** | Каталог 2000+ треков с поиском, сортировкой и neumorphic кнопками воспроизведения |
+| **Избранное** | Отдельный плейлист — собственный список любимых треков с drag-reorder и swipe-delete |
+| **Плеер** | Полноэкранный Now Playing: точечный прогресс, обложка, seek slider, iPod click wheel, кнопки ♡ и ↓ |
+| **Загрузки** | Офлайн-библиотека — доступна даже без интернета благодаря локальному индексу `downloads.json` |
+| **Настройки** | Выбор темы (системная / светлая / тёмная), ссылки, помощь, описание |
+| **Помощь** | Руководство пользователя — описание всех функций по разделам |
 
 ## Требования
 
