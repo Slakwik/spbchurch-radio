@@ -16,12 +16,7 @@ struct RadioView: View {
     private var isIPad: Bool { hSizeClass == .regular && vSizeClass == .regular }
 
     var body: some View {
-        ZStack {
-            AppColors.background.ignoresSafeArea()
-
-            // Tree as full-screen background — scaled to fill, clipped to bounds
-            treeBackground
-
+        Group {
             if isLandscape {
                 landscapeLayout
             } else {
@@ -29,6 +24,7 @@ struct RadioView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(backgroundLayer)
         .fullScreenCover(isPresented: $showNowPlaying) {
             NowPlayingView()
                 .environmentObject(radioPlayer)
@@ -43,20 +39,23 @@ struct RadioView: View {
         }
     }
 
-    // MARK: - Tree Background
+    // MARK: - Background Layer (color + tree + halo)
 
-    private var treeBackground: some View {
+    private var backgroundLayer: some View {
         let isPlaying = radioPlayer.isRadioPlaying
         return ZStack {
-            Image("TreeBackground")
-                .resizable()
-                .aspectRatio(contentMode: .fill)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .opacity(isPlaying ? 0.75 : 0.20)
-                .animation(.easeInOut(duration: 1.2), value: isPlaying)
+            AppColors.background
 
-            // Gold halo — appears only when playing
+            GeometryReader { geo in
+                Image("TreeBackground")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+            }
+            .opacity(isPlaying ? 0.75 : 0.20)
+            .animation(.easeInOut(duration: 1.2), value: isPlaying)
+
             RadialGradient(
                 colors: [
                     AppColors.accentAdaptive.opacity(isPlaying ? 0.35 : 0),
