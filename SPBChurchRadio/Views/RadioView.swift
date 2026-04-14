@@ -166,7 +166,7 @@ struct RadioView: View {
     // MARK: - Play / Stop Button
 
     private var playStopButton: some View {
-        let size: CGFloat = isIPad ? 108 : 96
+        let size: CGFloat = isIPad ? 162 : 144
         let isPlaying = radioPlayer.isRadioPlaying
 
         return Button(action: {
@@ -177,20 +177,20 @@ struct RadioView: View {
                 Circle()
                     .fill(AppColors.background)
                     .frame(width: size, height: size)
-                    .shadow(color: AppColors.shadowDark, radius: 12, x: 7, y: 7)
-                    .shadow(color: AppColors.shadowLight, radius: 12, x: -7, y: -7)
+                    .shadow(color: AppColors.shadowDark, radius: 16, x: 9, y: 9)
+                    .shadow(color: AppColors.shadowLight, radius: 16, x: -9, y: -9)
 
                 // Gold outline — always visible, brighter when playing
                 Circle()
                     .stroke(
                         AppColors.accentAdaptive.opacity(isPlaying ? 0.7 : 0.35),
-                        lineWidth: 2
+                        lineWidth: 2.5
                     )
-                    .frame(width: size - 10, height: size - 10)
+                    .frame(width: size - 14, height: size - 14)
                     .animation(.easeInOut(duration: 0.3), value: isPlaying)
 
                 Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                    .font(.system(size: isIPad ? 40 : 34, weight: .medium))
+                    .font(.system(size: isIPad ? 60 : 52, weight: .medium))
                     .foregroundStyle(isPlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
                     .frame(width: size, height: size)
                     .contentTransition(.symbolEffect(.replace))
