@@ -70,6 +70,10 @@ class FilePlayerService: ObservableObject {
         stop()
         isLoading = true
         currentTrack = track
+        let source = localURL == nil ? "поток" : "локальный файл"
+        Task { @MainActor in
+            LogManager.shared.info("Воспроизведение (\(source)): «\(track.title)»", source: "Player")
+        }
 
         let url = localURL ?? track.url
         let asset = AVURLAsset(url: url)

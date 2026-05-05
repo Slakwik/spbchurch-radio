@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @State private var showAbout = false
     @State private var showHelp = false
+    @State private var showLogs = false
 
     private var isIPad: Bool { hSizeClass == .regular }
 
@@ -23,6 +24,10 @@ struct SettingsView: View {
                         // MARK: - Help Section
                         settingsSectionHeader("Помощь")
                         helpSection
+
+                        // MARK: - Logs (diagnostics)
+                        settingsSectionHeader("Диагностика")
+                        logsSection
 
                         // MARK: - Links Section
                         settingsSectionHeader("Ссылки")
@@ -45,6 +50,9 @@ struct SettingsView: View {
             }
             .fullScreenCover(isPresented: $showHelp) {
                 HelpView()
+            }
+            .fullScreenCover(isPresented: $showLogs) {
+                LogsView()
             }
         }
     }
@@ -166,6 +174,49 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Logs Section
+
+    private var logsSection: some View {
+        Button(action: {
+            HapticManager.lightImpact()
+            showLogs = true
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.background)
+                        .frame(width: isIPad ? 44 : 38, height: isIPad ? 44 : 38)
+                        .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 3, x: 2, y: 2)
+                        .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 3, x: -2, y: -2)
+
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: isIPad ? 18 : 15, weight: .medium))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Журнал приложения")
+                        .font(.system(size: isIPad ? 17 : 15, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text(LogManager.shared.isEnabled ? "Запись событий включена" : "Запись событий выключена")
+                        .font(.system(size: isIPad ? 13 : 12, weight: .regular))
+                        .foregroundStyle(LogManager.shared.isEnabled ? AppColors.success : AppColors.textSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.4))
+            }
+            .padding(.horizontal, isIPad ? 20 : 16)
+            .padding(.vertical, isIPad ? 14 : 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .neumorphicRaised(cornerRadius: 16)
+    }
+
     // MARK: - Links Section
 
     private var linksSection: some View {
@@ -253,7 +304,7 @@ struct SettingsView: View {
                     Text("SPBChurch Radio")
                         .font(.system(size: isIPad ? 17 : 15, weight: .semibold))
                         .foregroundStyle(AppColors.textPrimary)
-                    Text("Версия 4.0 «Aurora»")
+                    Text("Версия 4.1")
                         .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
@@ -380,7 +431,7 @@ private struct AboutAppView: View {
                 .font(.system(size: isIPad ? 24 : 20, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("Версия 4.0 «Aurora»")
+            Text("Версия 4.1")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }

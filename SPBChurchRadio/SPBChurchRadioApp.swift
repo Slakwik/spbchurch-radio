@@ -21,6 +21,7 @@ struct SPBChurchRadioApp: App {
                 .preferredColorScheme(themeManager.mode.colorScheme)
                 .onAppear {
                     radioPlayer.downloadManager = downloadManager
+                    LogManager.shared.info("Приложение запущено", source: "App")
                 }
                 .onReceive(trackListVM.$tracks) { tracks in
                     radioPlayer.allTracks = tracks

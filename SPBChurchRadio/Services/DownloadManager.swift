@@ -76,6 +76,7 @@ class DownloadManager: ObservableObject {
         if isDownloaded(track) {
             downloads[track.url] = .completed
             registerDownloaded(track)
+            Task { @MainActor in LogManager.shared.info("Уже на диске: «\(track.title)»", source: "Downloads") }
             return
         }
 
@@ -85,6 +86,8 @@ class DownloadManager: ObservableObject {
         if activeTasks[track.url] != nil {
             return
         }
+
+        Task { @MainActor in LogManager.shared.info("Старт загрузки: «\(track.title)»", source: "Downloads") }
 
         // Clear any stale .failed marker before starting fresh — the UI shows
         // an exclamation glyph for .failed; we want it gone the moment retry
@@ -110,14 +113,17 @@ class DownloadManager: ObservableObject {
                     // Cancellation isn't a failure to surface — clear silently.
                     if (error as NSError).code == NSURLErrorCancelled {
                         self.downloads.removeValue(forKey: track.url)
+                        LogManager.shared.info("Загрузка отменена: «\(track.title)»", source: "Downloads")
                     } else {
                         self.downloads[track.url] = .failed(error)
+                        LogManager.shared.error("Загрузка не удалась: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
                     }
                     return
                 }
 
                 guard let tempURL = tempURL else {
                     self.downloads[track.url] = .failed(URLError(.cannotCreateFile))
+                    LogManager.shared.error("Нет файла после загрузки: «\(track.title)»", source: "Downloads")
                     return
                 }
 
@@ -130,8 +136,10 @@ class DownloadManager: ObservableObject {
                     self.downloads[track.url] = .completed
                     self.registerDownloaded(track)
                     self.objectWillChange.send()
+                    LogManager.shared.info("Загружено: «\(track.title)»", source: "Downloads")
                 } catch {
                     self.downloads[track.url] = .failed(error)
+                    LogManager.shared.error("Ошибка перемещения файла: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
                 }
             }
         }
@@ -166,6 +174,7 @@ class DownloadManager: ObservableObject {
         downloads.removeValue(forKey: track.url)
         unregisterDownloaded(track)
         objectWillChange.send()
+        Task { @MainActor in LogManager.shared.info("Удалено с устройства: «\(track.title)»", source: "Downloads") }
     }
 
     // MARK: - Metadata persistence

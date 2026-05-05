@@ -24,12 +24,15 @@ class RadioStreamService: ObservableObject {
             try session.setCategory(.playback, mode: .default, options: [])
             try session.setActive(true)
         } catch {
-            print("Audio session error: \(error)")
+            Task { @MainActor in
+                LogManager.shared.error("Audio session: \(error.localizedDescription)", source: "Radio")
+            }
         }
     }
 
     func play() {
         isLoading = true
+        Task { @MainActor in LogManager.shared.info("Старт прямого эфира", source: "Radio") }
 
         let asset = AVURLAsset(url: streamURL)
         playerItem = AVPlayerItem(asset: asset)
@@ -58,6 +61,7 @@ class RadioStreamService: ObservableObject {
         isPlaying = false
         stopMetadataPolling()
         clearNowPlaying()
+        Task { @MainActor in LogManager.shared.info("Эфир остановлен", source: "Radio") }
     }
 
     func toggle() {
@@ -88,13 +92,22 @@ class RadioStreamService: ObservableObject {
         request.timeoutInterval = 10
 
         URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
-            guard let data = data, error == nil,
-                  let html = String(data: data, encoding: .utf8) else { return }
+            if let error = error {
+                Task { @MainActor in
+                    LogManager.shared.warn("Метаданные эфира: \(error.localizedDescription)", source: "Radio")
+                }
+                return
+            }
+            guard let data = data, let html = String(data: data, encoding: .utf8) else { return }
 
             if let title = self?.parseCurrentTrack(from: html) {
                 DispatchQueue.main.async {
+                    let prev = self?.currentTrackTitle
                     self?.currentTrackTitle = title
                     self?.updateNowPlaying(title: title)
+                    if prev != title {
+                        LogManager.shared.info("Идёт: «\(title)»", source: "Radio")
+                    }
                 }
             }
         }.resume()

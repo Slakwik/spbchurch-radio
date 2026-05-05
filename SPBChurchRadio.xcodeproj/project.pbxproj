@@ -31,6 +31,8 @@
                 A10023 /* AppNavigator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10023; };
                 A10024 /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10024; };
                 A10025 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10025; };
+                A10026 /* LogManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10026; };
+                A10027 /* LogsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10027; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +61,8 @@
                 B10023 /* AppNavigator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNavigator.swift; sourceTree = "<group>"; };
                 B10024 /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
                 B10025 /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesView.swift; sourceTree = "<group>"; };
+                B10026 /* LogManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogManager.swift; sourceTree = "<group>"; };
+                B10027 /* LogsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogsView.swift; sourceTree = "<group>"; };
                 B10099 /* SPBChurchRadio.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SPBChurchRadio.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -117,6 +121,7 @@
                                 B10020 /* AnimatedEqualizerView.swift */,
                                 B10021 /* SettingsView.swift */,
                                 B10025 /* FavoritesView.swift */,
+                                B10027 /* LogsView.swift */,
                         );
                         path = Views;
                         sourceTree = "<group>";
@@ -141,6 +146,7 @@
                                 B10011 /* FilePlayerService.swift */,
                                 B10017 /* ArtworkService.swift */,
                                 B10024 /* FavoritesManager.swift */,
+                                B10026 /* LogManager.swift */,
                         );
                         path = Services;
                         sourceTree = "<group>";
@@ -245,6 +251,8 @@
                                 A10023 /* AppNavigator.swift in Sources */,
                                 A10024 /* FavoritesManager.swift in Sources */,
                                 A10025 /* FavoritesView.swift in Sources */,
+                                A10026 /* LogManager.swift in Sources */,
+                                A10027 /* LogsView.swift in Sources */,
                         );
                         runOnlyForDeploymentPostprocessing = 0;
                 };
