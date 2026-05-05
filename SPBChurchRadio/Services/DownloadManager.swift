@@ -17,14 +17,13 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
-    /// Default session — leverages the shared connection pool so HTTP/2
-    /// multiplexing works (one TCP+TLS handshake per host, multiple
-    /// downloads share the connection). The previous ephemeral workaround
-    /// was needed only while the server was HTTP/1.1; with HTTP/2 enabled
-    /// on `station.spbchurch.ru`, connection reuse is a win, not a hazard.
-    /// `waitsForConnectivity` stays at its default `false`.
+    /// Ephemeral session — no shared cache, no cookies, no credential store.
+    /// We tried the default session to leverage HTTP/2 multiplexing, but in
+    /// practice the keep-alive sockets from a previous download still cause a
+    /// noticeable delay before the next user-initiated download starts.
+    /// Ephemeral guarantees a clean connection state per task.
     private let session: URLSession = {
-        let config = URLSessionConfiguration.default
+        let config = URLSessionConfiguration.ephemeral
         config.httpMaximumConnectionsPerHost = 6
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
@@ -92,13 +91,15 @@ class DownloadManager: ObservableObject {
         // begins, not after the next progress tick.
         downloads[track.url] = .downloading(progress: 0)
 
-        // Bypass intermediate caches but allow connection reuse — with HTTP/2
-        // the same TCP+TLS connection multiplexes all downloads to this host.
-        let request = URLRequest(
+        // Per-request fresh connection — explicitly tell the server not to
+        // keep the socket alive, so the next user-initiated download isn't
+        // stuck waiting for an OS-level keep-alive timeout.
+        var request = URLRequest(
             url: track.url,
             cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
             timeoutInterval: 30
         )
+        request.setValue("close", forHTTPHeaderField: "Connection")
 
         let task = session.downloadTask(with: request) { [weak self] tempURL, _, error in
             DispatchQueue.main.async {
