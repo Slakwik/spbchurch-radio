@@ -76,7 +76,7 @@ class DownloadManager: ObservableObject {
         if isDownloaded(track) {
             downloads[track.url] = .completed
             registerDownloaded(track)
-            Task { @MainActor in LogManager.shared.info("Уже на диске: «\(track.title)»", source: "Downloads") }
+            LogManager.shared.info("Уже на диске: «\(track.title)»", source: "Downloads")
             return
         }
 
@@ -87,7 +87,7 @@ class DownloadManager: ObservableObject {
             return
         }
 
-        Task { @MainActor in LogManager.shared.info("Старт загрузки: «\(track.title)»", source: "Downloads") }
+        LogManager.shared.info("Старт загрузки: «\(track.title)»", source: "Downloads")
 
         // Clear any stale .failed marker before starting fresh — the UI shows
         // an exclamation glyph for .failed; we want it gone the moment retry
@@ -174,7 +174,7 @@ class DownloadManager: ObservableObject {
         downloads.removeValue(forKey: track.url)
         unregisterDownloaded(track)
         objectWillChange.send()
-        Task { @MainActor in LogManager.shared.info("Удалено с устройства: «\(track.title)»", source: "Downloads") }
+        LogManager.shared.info("Удалено с устройства: «\(track.title)»", source: "Downloads")
     }
 
     // MARK: - Metadata persistence

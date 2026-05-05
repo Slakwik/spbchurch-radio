@@ -7,20 +7,14 @@ class TrackListService {
         do {
             let (data, _) = try await URLSession.shared.data(from: listURL)
             guard let html = String(data: data, encoding: .utf8) else {
-                await MainActor.run {
-                    LogManager.shared.error("Не удалось декодировать каталог", source: "Catalog")
-                }
+                LogManager.shared.error("Не удалось декодировать каталог", source: "Catalog")
                 throw URLError(.cannotDecodeContentData)
             }
             let tracks = parseTrackList(from: html)
-            await MainActor.run {
-                LogManager.shared.info("Каталог загружен: \(tracks.count) треков", source: "Catalog")
-            }
+            LogManager.shared.info("Каталог загружен: \(tracks.count) треков", source: "Catalog")
             return tracks
         } catch {
-            await MainActor.run {
-                LogManager.shared.error("Загрузка каталога: \(error.localizedDescription)", source: "Catalog")
-            }
+            LogManager.shared.error("Загрузка каталога: \(error.localizedDescription)", source: "Catalog")
             throw error
         }
     }

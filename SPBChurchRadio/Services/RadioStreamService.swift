@@ -24,15 +24,13 @@ class RadioStreamService: ObservableObject {
             try session.setCategory(.playback, mode: .default, options: [])
             try session.setActive(true)
         } catch {
-            Task { @MainActor in
-                LogManager.shared.error("Audio session: \(error.localizedDescription)", source: "Radio")
-            }
+            LogManager.shared.error("Audio session: \(error.localizedDescription)", source: "Radio")
         }
     }
 
     func play() {
         isLoading = true
-        Task { @MainActor in LogManager.shared.info("Старт прямого эфира", source: "Radio") }
+        LogManager.shared.info("Старт прямого эфира", source: "Radio")
 
         let asset = AVURLAsset(url: streamURL)
         playerItem = AVPlayerItem(asset: asset)
@@ -61,7 +59,7 @@ class RadioStreamService: ObservableObject {
         isPlaying = false
         stopMetadataPolling()
         clearNowPlaying()
-        Task { @MainActor in LogManager.shared.info("Эфир остановлен", source: "Radio") }
+        LogManager.shared.info("Эфир остановлен", source: "Radio")
     }
 
     func toggle() {
@@ -93,9 +91,7 @@ class RadioStreamService: ObservableObject {
 
         URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
             if let error = error {
-                Task { @MainActor in
-                    LogManager.shared.warn("Метаданные эфира: \(error.localizedDescription)", source: "Radio")
-                }
+                LogManager.shared.warn("Метаданные эфира: \(error.localizedDescription)", source: "Radio")
                 return
             }
             guard let data = data, let html = String(data: data, encoding: .utf8) else { return }

@@ -41,11 +41,13 @@ struct LogEntry: Identifiable, Codable, Hashable {
     }
 }
 
-/// Application-wide log buffer. Captures messages from services so the user
-/// (and the developer over a support channel) can inspect what the app is
-/// doing without attaching Xcode. The buffer is persisted to disk and capped
-/// at `maxEntries` items to keep storage bounded.
-@MainActor
+/// Application-wide log buffer.
+///
+/// Thread-safety: this is *not* `@MainActor` — services log from background
+/// queues during URLSession callbacks, and forcing them to hop to main first
+/// would risk early-launch ordering issues. Internal mutations are serialised
+/// on `queue`; @Published updates are dispatched onto the main thread so
+/// SwiftUI observers stay safe.
 final class LogManager: ObservableObject {
     static let shared = LogManager()
 
@@ -56,6 +58,7 @@ final class LogManager: ObservableObject {
 
     private let maxEntries = 500
     private static let enabledKey = "log_enabled"
+    private let queue = DispatchQueue(label: "com.spbchurch.logmanager", qos: .utility)
 
     private static var fileURL: URL {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -72,6 +75,9 @@ final class LogManager: ObservableObject {
     // MARK: - Append
 
     func log(_ message: String, level: LogEntry.Level = .info, source: String? = nil) {
+        // Snapshot the flag — `isEnabled` may be flipped from another thread,
+        // but we read it once and treat the read as authoritative for this
+        // call. Worst case: one stale message gets through after a toggle.
         guard isEnabled else { return }
         let entry = LogEntry(
             id: UUID(),
@@ -81,11 +87,18 @@ final class LogManager: ObservableObject {
             message: message
         )
 
-        // Always hop to the main actor — services may call from background.
-        if Thread.isMainThread {
-            append(entry)
-        } else {
-            Task { @MainActor in self.append(entry) }
+        queue.async { [weak self] in
+            guard let self = self else { return }
+            var next = self.entries
+            next.append(entry)
+            if next.count > self.maxEntries {
+                next.removeFirst(next.count - self.maxEntries)
+            }
+            // Push the @Published mutation back onto main so SwiftUI stays happy.
+            DispatchQueue.main.async {
+                self.entries = next
+            }
+            self.persist(next)
         }
 
         #if DEBUG
@@ -98,19 +111,11 @@ final class LogManager: ObservableObject {
     func warn(_ message: String, source: String? = nil)  { log(message, level: .warning, source: source) }
     func error(_ message: String, source: String? = nil) { log(message, level: .error,   source: source) }
 
-    private func append(_ entry: LogEntry) {
-        entries.append(entry)
-        if entries.count > maxEntries {
-            entries.removeFirst(entries.count - maxEntries)
-        }
-        persist()
-    }
-
     // MARK: - Mutate
 
     func clear() {
-        entries.removeAll()
-        persist()
+        DispatchQueue.main.async { self.entries.removeAll() }
+        queue.async { [weak self] in self?.persist([]) }
     }
 
     // MARK: - Export
@@ -119,11 +124,12 @@ final class LogManager: ObservableObject {
     func exportText() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        let snapshot = entries  // value-type copy
         var lines: [String] = ["SPBChurch Radio · journal export"]
         lines.append("Exported: \(formatter.string(from: Date()))")
-        lines.append("Entries:  \(entries.count)")
+        lines.append("Entries:  \(snapshot.count)")
         lines.append(String(repeating: "-", count: 60))
-        for e in entries {
+        for e in snapshot {
             let src = e.source.map { " [\($0)]" } ?? ""
             lines.append("\(formatter.string(from: e.timestamp)) \(e.level.rawValue.uppercased())\(src) — \(e.message)")
         }
@@ -152,8 +158,8 @@ final class LogManager: ObservableObject {
         entries = saved
     }
 
-    private func persist() {
-        guard let data = try? JSONEncoder().encode(entries) else { return }
+    private func persist(_ snapshot: [LogEntry]) {
+        guard let data = try? JSONEncoder().encode(snapshot) else { return }
         try? data.write(to: Self.fileURL, options: .atomic)
     }
 }
