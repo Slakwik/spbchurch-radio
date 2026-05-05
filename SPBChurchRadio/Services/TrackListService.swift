@@ -13,6 +13,7 @@ class TrackListService {
 
     private func parseTrackList(from html: String) -> [Track] {
         var tracks = [Track]()
+        var seenURLs = Set<URL>()
 
         // Parse <a href="...">Title</a> within <li> elements
         let pattern = #"<a\s+href="([^"]+\.mp3)"[^>]*>([^<]+)</a>"#
@@ -38,7 +39,12 @@ class TrackListService {
                 url = URL(string: "https://station.spbchurch.ru/mp3/\(urlString)")
             }
 
-            if let url = url {
+            // Dedupe: the catalog HTML occasionally lists the same MP3 file
+            // twice with slightly different anchor text. Keep only the first
+            // occurrence — different display titles for the same audio file
+            // would just confuse the download/playback state which is keyed
+            // by URL anyway.
+            if let url = url, seenURLs.insert(url).inserted {
                 tracks.append(Track(title: title, url: url))
             }
         }

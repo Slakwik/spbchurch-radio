@@ -17,6 +17,18 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
+    /// Custom session: bumps the per-host concurrent connection limit so users
+    /// can queue up several tracks at once without the server-side cap kicking
+    /// in mid-download.
+    private let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.httpMaximumConnectionsPerHost = 4
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 600
+        config.waitsForConnectivity = true
+        return URLSession(configuration: config)
+    }()
+
     init() {
         loadMetadata()
     }
@@ -58,17 +70,37 @@ class DownloadManager: ObservableObject {
     // MARK: - Download
 
     func download(_ track: Track) {
-        guard activeTasks[track.url] == nil else { return }
+        // If the file is already on disk, just sync state — nothing to do.
+        if isDownloaded(track) {
+            downloads[track.url] = .completed
+            registerDownloaded(track)
+            return
+        }
 
+        // Re-tapping while a download is already in flight is a no-op. (Failed
+        // and completed states fall through to a fresh attempt because their
+        // task is gone from activeTasks.)
+        if activeTasks[track.url] != nil {
+            return
+        }
+
+        // Clear any stale .failed marker before starting fresh — the UI shows
+        // an exclamation glyph for .failed; we want it gone the moment retry
+        // begins, not after the next progress tick.
         downloads[track.url] = .downloading(progress: 0)
 
-        let task = URLSession.shared.downloadTask(with: track.url) { [weak self] tempURL, _, error in
+        let task = session.downloadTask(with: track.url) { [weak self] tempURL, _, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.activeTasks.removeValue(forKey: track.url)
 
                 if let error = error {
-                    self.downloads[track.url] = .failed(error)
+                    // Cancellation isn't a failure to surface — clear silently.
+                    if (error as NSError).code == NSURLErrorCancelled {
+                        self.downloads.removeValue(forKey: track.url)
+                    } else {
+                        self.downloads[track.url] = .failed(error)
+                    }
                     return
                 }
 
@@ -97,7 +129,11 @@ class DownloadManager: ObservableObject {
 
         let observation = task.progress.observe(\.fractionCompleted) { [weak self] progress, _ in
             DispatchQueue.main.async {
-                self?.downloads[track.url] = .downloading(progress: progress.fractionCompleted)
+                // Don't overwrite a terminal state if the observer fires late.
+                guard let self = self else { return }
+                if case .completed = self.downloads[track.url] { return }
+                if case .failed = self.downloads[track.url] { return }
+                self.downloads[track.url] = .downloading(progress: progress.fractionCompleted)
             }
         }
         objc_setAssociatedObject(task, "progressObservation", observation, .OBJC_ASSOCIATION_RETAIN)
@@ -110,6 +146,10 @@ class DownloadManager: ObservableObject {
     }
 
     func deleteDownload(_ track: Track) {
+        // Cancel any in-flight task before removing the file so the completion
+        // handler doesn't race a fresh download.
+        activeTasks[track.url]?.cancel()
+        activeTasks.removeValue(forKey: track.url)
         try? FileManager.default.removeItem(at: Self.localFileURL(for: track))
         downloads.removeValue(forKey: track.url)
         unregisterDownloaded(track)
