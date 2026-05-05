@@ -17,15 +17,19 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
-    /// Custom session: bumps the per-host concurrent connection limit so users
-    /// can queue up several tracks at once without the server-side cap kicking
-    /// in mid-download.
+    /// Ephemeral session — no shared cache, no cookies, no credential store.
+    /// Each download starts with a clean connection state, which prevents the
+    /// per-host keep-alive socket from the previous transfer from blocking the
+    /// next user-initiated download. We deliberately leave `waitsForConnectivity`
+    /// at its default `false` because the previous attempt to enable it caused
+    /// the next tap to silently wait for iOS to consider the network "stable"
+    /// after the prior socket teardown.
     private let session: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.httpMaximumConnectionsPerHost = 4
+        let config = URLSessionConfiguration.ephemeral
+        config.httpMaximumConnectionsPerHost = 6
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
-        config.waitsForConnectivity = true
+        config.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         return URLSession(configuration: config)
     }()
 
@@ -89,7 +93,13 @@ class DownloadManager: ObservableObject {
         // begins, not after the next progress tick.
         downloads[track.url] = .downloading(progress: 0)
 
-        let task = session.downloadTask(with: track.url) { [weak self] tempURL, _, error in
+        // Per-request fresh connection — explicitly tell the server not to
+        // keep the socket alive, so the next user-initiated download isn't
+        // stuck waiting for an OS-level keep-alive timeout.
+        var request = URLRequest(url: track.url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
+        request.setValue("close", forHTTPHeaderField: "Connection")
+
+        let task = session.downloadTask(with: request) { [weak self] tempURL, _, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.activeTasks.removeValue(forKey: track.url)

@@ -114,6 +114,15 @@ Editorial-glass палитра — нативный iOS-материал, тёп
 
 ## История изменений
 
+### v4.0.2 — Устранение задержки между загрузками
+В v4.0.1 я включил `waitsForConnectivity = true` в URLSessionConfiguration — это оказалось вредно. Флаг заставлял iOS ждать «стабильную сеть» после teardown'а keep-alive сокета от предыдущей загрузки, из-за чего следующее нажатие «Скачать» висело несколько секунд, пока ОС не считала связь готовой.
+
+- **Ephemeral session** вместо `.default` — нет общего кэша, кук и credential storage; каждая загрузка стартует с чистым соединением, не ждёт зависший keep-alive
+- Убран `waitsForConnectivity` (default `false`)
+- `httpMaximumConnectionsPerHost = 6` (стандартный максимум для ephemeral)
+- `Connection: close` в каждом `URLRequest` — сервер закрывает сокет сразу после ответа, OS не держит его в keep-alive пуле
+- `cachePolicy = .reloadIgnoringLocalAndRemoteCacheData` на уровне сессии и на каждый запрос — гарантия свежего соединения
+
 ### v4.0.1 — Исправление загрузок при дубликатах в каталоге
 - **Каталог:** `TrackListService.parseTrackList` теперь дедуплицирует треки по URL — иначе одинаковые `<a href>` в HTML создавали по две `Track` записи с одинаковым URL, что путало логику загрузок (один файл = один хеш = один локальный mp3)
 - **DownloadManager.download:** перед стартом проверяет `isDownloaded(track)` — если файл уже есть на диске, синхронизирует state в `.completed` и выходит, ничего не качая повторно
