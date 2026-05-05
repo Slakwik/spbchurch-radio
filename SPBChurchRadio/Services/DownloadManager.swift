@@ -105,41 +105,66 @@ class DownloadManager: ObservableObject {
         request.setValue("close", forHTTPHeaderField: "Connection")
 
         let task = session.downloadTask(with: request) { [weak self] tempURL, _, error in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.activeTasks.removeValue(forKey: track.url)
+            // ─── PHASE 1 (sync, on URLSession's queue) ────────────────────────
+            // We MUST move the temp file out of URLSession's scratch area
+            // before this closure returns — the moment we leave, URLSession
+            // deletes the temp file. Doing the move inside DispatchQueue.main
+            // .async would race against that cleanup.
+            enum MoveOutcome {
+                case moved(URL)
+                case failed(Error)
+                case noFile
+                case cancelled
+                case netError(Error)
+            }
 
-                if let error = error {
-                    // Cancellation isn't a failure to surface — clear silently.
-                    if (error as NSError).code == NSURLErrorCancelled {
-                        self.downloads.removeValue(forKey: track.url)
-                        LogManager.shared.info("Загрузка отменена: «\(track.title)»", source: "Downloads")
-                    } else {
-                        self.downloads[track.url] = .failed(error)
-                        LogManager.shared.error("Загрузка не удалась: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
-                    }
-                    return
+            let outcome: MoveOutcome
+            if let error = error {
+                if (error as NSError).code == NSURLErrorCancelled {
+                    outcome = .cancelled
+                } else {
+                    outcome = .netError(error)
                 }
-
-                guard let tempURL = tempURL else {
-                    self.downloads[track.url] = .failed(URLError(.cannotCreateFile))
-                    LogManager.shared.error("Нет файла после загрузки: «\(track.title)»", source: "Downloads")
-                    return
-                }
-
+            } else if let tempURL = tempURL {
                 let dest = Self.localFileURL(for: track)
                 do {
                     if FileManager.default.fileExists(atPath: dest.path) {
                         try FileManager.default.removeItem(at: dest)
                     }
                     try FileManager.default.moveItem(at: tempURL, to: dest)
+                    outcome = .moved(dest)
+                } catch {
+                    outcome = .failed(error)
+                }
+            } else {
+                outcome = .noFile
+            }
+
+            // ─── PHASE 2 (async on main) ──────────────────────────────────────
+            // Only state mutations and logging happen here — the file is
+            // already in its final location (or wasn't going there at all).
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.activeTasks.removeValue(forKey: track.url)
+
+                switch outcome {
+                case .cancelled:
+                    self.downloads.removeValue(forKey: track.url)
+                    LogManager.shared.info("Загрузка отменена: «\(track.title)»", source: "Downloads")
+                case .netError(let error):
+                    self.downloads[track.url] = .failed(error)
+                    LogManager.shared.error("Загрузка не удалась: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
+                case .noFile:
+                    self.downloads[track.url] = .failed(URLError(.cannotCreateFile))
+                    LogManager.shared.error("Нет файла после загрузки: «\(track.title)»", source: "Downloads")
+                case .failed(let error):
+                    self.downloads[track.url] = .failed(error)
+                    LogManager.shared.error("Ошибка перемещения файла: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
+                case .moved:
                     self.downloads[track.url] = .completed
                     self.registerDownloaded(track)
                     self.objectWillChange.send()
                     LogManager.shared.info("Загружено: «\(track.title)»", source: "Downloads")
-                } catch {
-                    self.downloads[track.url] = .failed(error)
-                    LogManager.shared.error("Ошибка перемещения файла: «\(track.title)» — \(error.localizedDescription)", source: "Downloads")
                 }
             }
         }
