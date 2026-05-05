@@ -17,11 +17,7 @@ struct RadioView: View {
 
     var body: some View {
         Group {
-            if isLandscape {
-                landscapeLayout
-            } else {
-                portraitLayout
-            }
+            if isLandscape { landscapeLayout } else { portraitLayout }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundLayer)
@@ -31,15 +27,13 @@ struct RadioView: View {
                 .environmentObject(favoritesManager)
                 .environmentObject(downloadManager)
         }
-        .onAppear {
-            if radioPlayer.isRadioPlaying { startPulsing() }
-        }
+        .onAppear { if radioPlayer.isRadioPlaying { startPulsing() } }
         .onChange(of: radioPlayer.isRadioPlaying) { _, playing in
             if playing { startPulsing() } else { pulseScale = 1.0 }
         }
     }
 
-    // MARK: - Background Layer (color + tree + halo)
+    // MARK: - Background (tree image + gold halo)
 
     private var backgroundLayer: some View {
         let isPlaying = radioPlayer.isRadioPlaying
@@ -53,12 +47,12 @@ struct RadioView: View {
                     .frame(width: geo.size.width, height: geo.size.height)
                     .clipped()
             }
-            .opacity(isPlaying ? 0.75 : 0.20)
+            .opacity(isPlaying ? 0.55 : 0.14)
             .animation(.easeInOut(duration: 1.2), value: isPlaying)
 
             RadialGradient(
                 colors: [
-                    AppColors.accentAdaptive.opacity(isPlaying ? 0.35 : 0),
+                    AppColors.accentAdaptive.opacity(isPlaying ? 0.30 : 0),
                     AppColors.accentAdaptive.opacity(isPlaying ? 0.08 : 0),
                     .clear
                 ],
@@ -67,44 +61,41 @@ struct RadioView: View {
                 endRadius: 480
             )
             .blendMode(.plusLighter)
-            .allowsHitTesting(false)
             .scaleEffect(pulseScale)
+            .allowsHitTesting(false)
             .animation(.easeInOut(duration: 1.2), value: isPlaying)
         }
         .ignoresSafeArea()
     }
 
-    // MARK: - Portrait Layout
+    // MARK: - Portrait
 
     private var portraitLayout: some View {
         VStack(spacing: 0) {
             stationHeader
-                .padding(.top, isIPad ? 20 : 12)
+                .padding(.top, isIPad ? 16 : 8)
 
-            Spacer(minLength: 20)
+            Spacer()
 
-            // Play/stop button — vertically centered, stable position
             playStopButton
 
-            Spacer(minLength: 20)
+            Spacer()
 
-            // Track info + find button (fixed-height container)
-            trackInfo
-                .padding(.bottom, 14)
-
-            // Live / file widget
-            bottomStatus
-                .padding(.bottom, isIPad ? 20 : 12)
+            VStack(spacing: 16) {
+                trackInfo
+                liveStatusPill
+                fileWidget
+            }
+            .padding(.bottom, isIPad ? 28 : 18)
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, isIPad ? 28 : 20)
+        .padding(.horizontal, isIPad ? 32 : 20)
     }
 
-    // MARK: - Landscape Layout
+    // MARK: - Landscape
 
     private var landscapeLayout: some View {
-        HStack(spacing: 20) {
-            // Left: play button
+        HStack(spacing: 24) {
             VStack {
                 Spacer()
                 playStopButton
@@ -112,134 +103,136 @@ struct RadioView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Right: info + status
-            VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 14) {
                 Spacer()
                 stationHeader
                 trackInfo
-                bottomStatus
-                    .frame(maxWidth: 360)
+                liveStatusPill
+                fileWidget
                 Spacer()
             }
             .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 24)
         .padding(.vertical, 8)
     }
 
-    // MARK: - Station Header
+    // MARK: - Station Header — display typography
 
     private var stationHeader: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(alignment: .lastTextBaseline, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("Радио")
-                    .font(.system(size: isIPad ? 36 : 28, weight: .bold))
+                    .font(AppFonts.display(isIPad ? 52 : 44))
+                    .tracking(-1)
                     .foregroundStyle(AppColors.textPrimary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+                    .minimumScaleFactor(0.7)
 
                 Text("SPBChurch")
-                    .font(.system(size: isIPad ? 14 : 12, weight: .medium))
+                    .font(.system(size: isIPad ? 16 : 13, weight: .semibold))
+                    .tracking(2)
+                    .textCase(.uppercase)
                     .foregroundStyle(AppColors.accentAdaptive)
-                    .lineLimit(1)
             }
+
             Spacer(minLength: 0)
 
-            // Equalizer in header when playing
             if radioPlayer.isRadioPlaying {
                 LargeEqualizerView(isPlaying: true)
-                    .frame(height: 32)
-                    .layoutPriority(0)
+                    .frame(height: 28)
+                    .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func startPulsing() {
-        pulseScale = 1.0
-        withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
-            pulseScale = 1.08
-        }
-    }
-
-    // MARK: - Play / Stop Button
+    // MARK: - Play / Stop button — solid filled accent circle
 
     private var playStopButton: some View {
-        let size: CGFloat = isIPad ? 162 : 144
+        let size: CGFloat = isIPad ? 168 : 144
         let isPlaying = radioPlayer.isRadioPlaying
 
-        return Button(action: {
+        return Button {
             HapticManager.mediumImpact()
             radioPlayer.toggleRadio()
-        }) {
+        } label: {
             ZStack {
+                // Outer breathing ring
                 Circle()
-                    .fill(AppColors.background)
-                    .frame(width: size, height: size)
-                    .shadow(color: AppColors.shadowDark, radius: 16, x: 9, y: 9)
-                    .shadow(color: AppColors.shadowLight, radius: 16, x: -9, y: -9)
+                    .strokeBorder(AppColors.accentAdaptive.opacity(isPlaying ? 0.25 : 0), lineWidth: 1.5)
+                    .frame(width: size + 28, height: size + 28)
+                    .scaleEffect(pulseScale)
 
-                // Gold outline — always visible, brighter when playing
+                // Main filled circle
                 Circle()
-                    .stroke(
-                        AppColors.accentAdaptive.opacity(isPlaying ? 0.7 : 0.35),
-                        lineWidth: 2.5
+                    .fill(
+                        isPlaying
+                        ? AnyShapeStyle(AppGradients.accentGradient)
+                        : AnyShapeStyle(AppColors.surface)
                     )
-                    .frame(width: size - 14, height: size - 14)
-                    .animation(.easeInOut(duration: 0.3), value: isPlaying)
+                    .frame(width: size, height: size)
+                    .overlay {
+                        Circle().strokeBorder(
+                            isPlaying ? Color.white.opacity(0.18) : AppColors.stroke,
+                            lineWidth: 1
+                        )
+                    }
+                    .shadow(
+                        color: AppColors.accent.opacity(isPlaying ? 0.40 : 0.10),
+                        radius: 22, y: 10
+                    )
 
                 Image(systemName: isPlaying ? "stop.fill" : "play.fill")
-                    .font(.system(size: isIPad ? 60 : 52, weight: .medium))
-                    .foregroundStyle(isPlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
+                    .font(.system(size: isIPad ? 64 : 56, weight: .semibold))
+                    .foregroundStyle(isPlaying ? .white : AppColors.accentAdaptive)
                     .frame(width: size, height: size)
                     .contentTransition(.symbolEffect(.replace))
             }
-            .frame(width: size, height: size)
+            .frame(width: size + 28, height: size + 28)
         }
-        .buttonStyle(NeumorphicButtonStyle())
+        .buttonStyle(PressEffectButtonStyle())
     }
 
-    // MARK: - Track Info
+    private func startPulsing() {
+        pulseScale = 1.0
+        withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) {
+            pulseScale = 1.06
+        }
+    }
+
+    // MARK: - Track Info — minimalist text block
 
     private var trackInfo: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
+            Text("СЕЙЧАС ИГРАЕТ")
+                .font(.system(size: 10, weight: .bold))
+                .tracking(2)
+                .foregroundStyle(AppColors.textSecondary)
+
             Text(radioPlayer.currentRadioTrack)
-                .font(.system(size: isIPad ? 20 : 17, weight: .bold))
+                .font(.system(size: isIPad ? 22 : 18, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
-                .frame(height: isIPad ? 52 : 46) // fixed height for 1-2 lines
+                .frame(height: isIPad ? 56 : 50)
 
-            Text("SPBChurch Radio")
-                .font(.system(size: isIPad ? 15 : 13, weight: .medium))
-                .foregroundStyle(AppColors.textSecondary)
-
-            // Always reserve the space so the layout doesn't jump
-            findTrackButton
-                .padding(.top, 4)
-                .opacity(RadioTitle.isSearchable(radioPlayer.currentRadioTrack) ? 1 : 0)
-                .allowsHitTesting(RadioTitle.isSearchable(radioPlayer.currentRadioTrack))
-                .animation(.easeInOut(duration: 0.25), value: radioPlayer.currentRadioTrack)
-        }
-    }
-
-    // MARK: - Find Track Button
-
-    private var findTrackButton: some View {
-        Button(action: findCurrentTrackInLibrary) {
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 12, weight: .semibold))
-                Text("Найти в библиотеке")
-                    .font(.system(size: 12, weight: .semibold))
+            if RadioTitle.isSearchable(radioPlayer.currentRadioTrack) {
+                Button(action: findCurrentTrackInLibrary) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Найти в библиотеке")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .auroraTonalPill()
+                }
+                .buttonStyle(PressEffectButtonStyle())
+            } else {
+                Color.clear.frame(height: 32)
             }
-            .foregroundStyle(AppColors.accentAdaptive)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
         }
-        .buttonStyle(NeumorphicButtonStyle())
-        .neumorphicRaised(cornerRadius: 20)
     }
 
     private func findCurrentTrackInLibrary() {
@@ -250,104 +243,85 @@ struct RadioView: View {
         navigator.go(to: .tracks)
     }
 
-    // MARK: - Bottom Status (live indicator + file player shortcut)
+    // MARK: - Live Status — small inline pill
 
-    private var bottomStatus: some View {
-        VStack(spacing: 12) {
-            liveIndicatorRow
-
-            if radioPlayer.activeMode == .file,
-               radioPlayer.filePlayer.currentTrack != nil {
-                filePlayerRow
-            }
-        }
-    }
-
-    private var liveIndicatorRow: some View {
-        HStack(spacing: 10) {
-            if radioPlayer.isRadioPlaying {
-                Circle()
-                    .fill(AppColors.success)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: AppColors.success.opacity(0.5), radius: 4)
-            } else {
-                Circle()
-                    .fill(AppColors.textSecondary.opacity(0.3))
-                    .frame(width: 8, height: 8)
-            }
+    private var liveStatusPill: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(radioPlayer.isRadioPlaying ? AppColors.success : AppColors.textSecondary.opacity(0.4))
+                .frame(width: 6, height: 6)
+                .shadow(color: AppColors.success.opacity(radioPlayer.isRadioPlaying ? 0.5 : 0), radius: 4)
 
             Text(radioPlayer.isRadioPlaying ? "В ЭФИРЕ" : "ОФЛАЙН")
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(radioPlayer.isRadioPlaying ? AppColors.accentAdaptive : AppColors.textSecondary)
+                .font(.system(size: 10, weight: .bold))
                 .tracking(2)
-
-            if radioPlayer.isRadioPlaying {
-                Spacer()
-                MiniEqualizerView(isPlaying: true)
-            }
+                .foregroundStyle(radioPlayer.isRadioPlaying ? AppColors.textPrimary : AppColors.textSecondary)
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity)
-        .neumorphicRaised(cornerRadius: 14)
     }
 
+    // MARK: - File player widget — appears only when a file is queued
+
     @ViewBuilder
-    private var filePlayerRow: some View {
-        if let track = radioPlayer.filePlayer.currentTrack {
-            Button(action: {
+    private var fileWidget: some View {
+        if radioPlayer.activeMode == .file,
+           let track = radioPlayer.filePlayer.currentTrack {
+            Button {
                 HapticManager.lightImpact()
                 showNowPlaying = true
-            }) {
-                HStack(spacing: 10) {
+            } label: {
+                HStack(spacing: 12) {
                     Image(systemName: "music.note")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(AppColors.accentAdaptive)
+                        .frame(width: 32, height: 32)
+                        .background {
+                            Circle().fill(AppColors.accentTinted)
+                        }
 
-                    Text(track.title)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppColors.textPrimary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Играет файл")
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(1)
+                            .foregroundStyle(AppColors.textSecondary)
+                        Text(track.title)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary)
+                            .lineLimit(1)
+                    }
 
                     Spacer()
 
                     Image(systemName: "chevron.up")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 13, weight: .bold))
                         .foregroundStyle(AppColors.textSecondary)
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(NeumorphicButtonStyle())
-            .neumorphicRaised(cornerRadius: 14)
+            .buttonStyle(PressEffectButtonStyle())
+            .auroraGlass(cornerRadius: 18)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
     }
 }
 
-// MARK: - Neumorphic Button Style
+// MARK: - Press feedback button style — replaces the heavier neumorphic style
 
-struct NeumorphicButtonStyle: ButtonStyle {
+struct PressEffectButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
-            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.spring(response: 0.28, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
 
-// MARK: - Glass Button Style (compatibility)
+// Compatibility — earlier views referenced these names.
+typealias NeumorphicButtonStyle = PressEffectButtonStyle
+typealias GlassButtonStyle = PressEffectButtonStyle
 
-struct GlassButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.92 : 1.0)
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
-            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
-    }
-}
-
-// MARK: - File Now Playing Bar (neumorphic)
+// MARK: - File now-playing bar (compatibility — used elsewhere)
 
 struct FileNowPlayingBar: View {
     let track: Track
@@ -357,54 +331,45 @@ struct FileNowPlayingBar: View {
         HStack(spacing: 10) {
             Image(systemName: "music.note")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(AppColors.accentAdaptive)
+                .foregroundStyle(AppColors.accentAdaptive)
 
             Text(track.title)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.textPrimary)
+                .foregroundStyle(AppColors.textPrimary)
                 .lineLimit(1)
 
             Spacer()
 
-            Button(action: {
+            Button {
                 HapticManager.selection()
                 radioPlayer.filePlayer.order = radioPlayer.filePlayer.order.next
-            }) {
+            } label: {
                 Image(systemName: radioPlayer.filePlayer.order.iconName)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(AppColors.accentAdaptive)
+                    .foregroundStyle(AppColors.accentAdaptive)
                     .contentTransition(.symbolEffect(.replace))
             }
 
-            Button(action: {
-                HapticManager.lightImpact()
-                radioPlayer.playPrevious()
-            }) {
+            Button { radioPlayer.playPrevious() } label: {
                 Image(systemName: "backward.fill")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary.opacity(0.6))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.6))
             }
 
-            Button(action: {
-                HapticManager.mediumImpact()
-                radioPlayer.toggleFilePause()
-            }) {
+            Button { radioPlayer.toggleFilePause() } label: {
                 Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary)
+                    .foregroundStyle(AppColors.textPrimary)
             }
 
-            Button(action: {
-                HapticManager.lightImpact()
-                radioPlayer.playNext()
-            }) {
+            Button { radioPlayer.playNext() } label: {
                 Image(systemName: "forward.fill")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary.opacity(0.6))
+                    .foregroundStyle(AppColors.textPrimary.opacity(0.6))
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .neumorphicRaised(cornerRadius: 14)
+        .auroraGlass(cornerRadius: 14)
     }
 }

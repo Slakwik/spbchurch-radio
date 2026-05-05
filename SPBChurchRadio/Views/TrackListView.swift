@@ -4,146 +4,122 @@ struct TrackListView: View {
     @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var radioPlayer: RadioPlayerViewModel
     @EnvironmentObject var downloadManager: DownloadManager
+    @EnvironmentObject var favoritesManager: FavoritesManager
     @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.background
-                    .ignoresSafeArea()
+                AppColors.background.ignoresSafeArea()
 
                 if trackListVM.isLoading {
                     loadingState
                 } else if let error = trackListVM.errorMessage {
                     errorState(message: error)
                 } else {
-                    List {
-                        // Track count header
-                        if !trackListVM.filteredTracks.isEmpty {
-                            HStack {
-                                Text("\(trackListVM.filteredTracks.count) треков")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(AppColors.textSecondary)
-                                Spacer()
-                            }
-                            .listRowInsets(EdgeInsets(
-                                top: 4,
-                                leading: hSizeClass == .regular ? 24 : 16,
-                                bottom: 4,
-                                trailing: hSizeClass == .regular ? 24 : 16
-                            ))
-                            .listRowBackground(Color.clear)
-                        }
-
-                        ForEach(trackListVM.filteredTracks) { track in
-                            TrackRow(track: track)
-                                .listRowInsets(EdgeInsets(
-                                    top: 6,
-                                    leading: hSizeClass == .regular ? 24 : 16,
-                                    bottom: 6,
-                                    trailing: hSizeClass == .regular ? 24 : 16
-                                ))
-                                .listRowBackground(Color.clear)
-                        }
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .refreshable {
-                        trackListVM.refresh()
-                    }
+                    trackList
                 }
             }
             .navigationTitle("Треки")
-            .toolbarTitleDisplayMode(.large)
-            .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию...")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $trackListVM.searchText, prompt: "Поиск по названию")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    sortMenu
-                }
+                ToolbarItem(placement: .topBarTrailing) { sortMenu }
             }
             .tint(AppColors.accentAdaptive)
-            .onAppear {
-                trackListVM.loadTracks()
-            }
+            .onAppear { trackListVM.loadTracks() }
         }
     }
 
-    // MARK: - Sort Menu
+    private var trackList: some View {
+        List {
+            // Counter row
+            if !trackListVM.filteredTracks.isEmpty {
+                HStack {
+                    Text("\(trackListVM.filteredTracks.count) ТРЕКОВ")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.5)
+                        .foregroundStyle(AppColors.textSecondary)
+                    Spacer()
+                }
+                .listRowInsets(EdgeInsets(top: 0, leading: hSizeClass == .regular ? 28 : 18, bottom: 6, trailing: 18))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
+            ForEach(trackListVM.filteredTracks) { track in
+                TrackRow(track: track)
+                    .listRowInsets(EdgeInsets(top: 4, leading: hSizeClass == .regular ? 28 : 18, bottom: 4, trailing: 18))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .refreshable { trackListVM.refresh() }
+    }
+
+    // MARK: - Sort menu
 
     private var sortMenu: some View {
         Menu {
             Picker("Сортировка", selection: $trackListVM.sortOrder) {
                 ForEach(TrackListViewModel.SortOrder.allCases) { order in
-                    Label(order.displayName, systemImage: order.iconName)
-                        .tag(order)
+                    Label(order.displayName, systemImage: order.iconName).tag(order)
                 }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down.circle")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(AppColors.accentAdaptive)
+            HStack(spacing: 4) {
+                Image(systemName: trackListVM.sortOrder.iconName)
+                    .font(.system(size: 13, weight: .semibold))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 9, weight: .bold))
+            }
+            .foregroundStyle(AppColors.accentAdaptive)
         }
-        .onChange(of: trackListVM.sortOrder) { _, _ in
-            HapticManager.selection()
-        }
+        .onChange(of: trackListVM.sortOrder) { _, _ in HapticManager.selection() }
     }
 
-    // MARK: - Loading State
+    // MARK: - States
 
     private var loadingState: some View {
-        VStack(spacing: 20) {
-            // Animated loading dots
+        VStack(spacing: 18) {
             HStack(spacing: 8) {
-                ForEach(0..<3, id: \.self) { i in
-                    PulsingDot(delay: Double(i) * 0.3)
-                }
+                ForEach(0..<3, id: \.self) { i in PulsingDot(delay: Double(i) * 0.3) }
             }
-            Text("Загрузка треков...")
-                .font(.system(size: 15, weight: .medium))
+            Text("Загрузка треков…")
+                .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }
     }
 
-    // MARK: - Error State
-
     private func errorState(message: String) -> some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(AppColors.background)
-                    .frame(width: 80, height: 80)
-                    .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 6, x: 4, y: 4)
-                    .shadow(color: AppColors.shadowLight, radius: 6, x: -4, y: -4)
-
-                Image(systemName: "wifi.exclamationmark")
-                    .font(.system(size: 32, weight: .light))
-                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
-                    .symbolRenderingMode(.hierarchical)
-            }
-
+        VStack(spacing: 16) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 40, weight: .light))
+                .foregroundStyle(AppColors.textSecondary.opacity(0.6))
             Text(message)
                 .font(.system(size: 14))
                 .foregroundStyle(AppColors.textSecondary)
                 .multilineTextAlignment(.center)
-
-            Button(action: {
+            Button {
                 HapticManager.lightImpact()
                 trackListVM.refresh()
-            }) {
+            } label: {
                 Text("Повторить")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
-                    .padding(.vertical, 10)
-                    .background(AppGradients.accentGradient, in: Capsule())
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(AppGradients.accentGradient))
             }
         }
         .padding()
     }
 }
 
-// MARK: - Pulsing Dot (Loading Animation)
+// MARK: - Pulsing Dot
 
 private struct PulsingDot: View {
     let delay: Double
@@ -152,15 +128,10 @@ private struct PulsingDot: View {
     var body: some View {
         Circle()
             .fill(AppColors.accentAdaptive)
-            .frame(width: 10, height: 10)
+            .frame(width: 9, height: 9)
             .scaleEffect(isPulsing ? 1.3 : 0.7)
             .opacity(isPulsing ? 1.0 : 0.4)
-            .animation(
-                .easeInOut(duration: 0.6)
-                    .repeatForever(autoreverses: true)
-                    .delay(delay),
-                value: isPulsing
-            )
+            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true).delay(delay), value: isPulsing)
             .onAppear { isPulsing = true }
     }
 }
@@ -173,73 +144,62 @@ struct TrackRow: View {
     @EnvironmentObject var downloadManager: DownloadManager
     @EnvironmentObject var trackListVM: TrackListViewModel
     @EnvironmentObject var favoritesManager: FavoritesManager
-    @Environment(\.horizontalSizeClass) private var hSizeClass
     @Environment(\.colorScheme) private var colorScheme
 
-    private var isFavorite: Bool {
-        favoritesManager.isFavorite(track)
-    }
-
-    private var isCurrentTrack: Bool {
-        radioPlayer.filePlayer.currentTrack?.url == track.url
-    }
-
-    private var isDownloaded: Bool {
-        downloadManager.isDownloaded(track)
-    }
-
-    private var isIPad: Bool { hSizeClass == .regular }
+    private var isCurrent: Bool { radioPlayer.filePlayer.currentTrack?.url == track.url }
+    private var isPlaying: Bool { isCurrent && radioPlayer.isFilePlaying }
+    private var isFavorite: Bool { favoritesManager.isFavorite(track) }
+    private var isDownloaded: Bool { downloadManager.isDownloaded(track) }
 
     var body: some View {
-        HStack(spacing: isIPad ? 18 : 14) {
-            trackThumbnail
+        Button(action: play) {
+            HStack(spacing: 14) {
+                statusGlyph
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(track.title)
-                    .font(.system(size: isIPad ? 17 : 15, weight: isCurrentTrack ? .semibold : .regular))
-                    .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary.opacity(0.85))
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(track.title)
+                        .font(.system(size: 15, weight: isCurrent ? .semibold : .regular))
+                        .foregroundStyle(isCurrent ? AppColors.accentAdaptive : AppColors.textPrimary)
+                        .lineLimit(2)
 
-                if isDownloaded {
-                    HStack(spacing: 3) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 9))
-                        Text("Загружено")
-                            .font(.system(size: 11, weight: .medium))
+                    HStack(spacing: 6) {
+                        if isDownloaded {
+                            Label("Загружен", systemImage: "arrow.down.circle.fill")
+                                .font(.system(size: 11, weight: .medium))
+                                .labelStyle(.titleAndIcon)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                        if isFavorite {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 10))
+                                .foregroundStyle(AppColors.accentAdaptive)
+                        }
                     }
-                    .foregroundStyle(AppColors.textSecondary)
                 }
-            }
 
-            Spacer(minLength: 4)
+                Spacer(minLength: 4)
 
-            HStack(spacing: isIPad ? 18 : 14) {
-                favoriteButton
-                downloadButton
-                playButton
+                actionsCluster
             }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
         }
-        .padding(.vertical, isIPad ? 6 : 4)
-        .padding(.horizontal, isCurrentTrack ? 10 : 0)
-        .background(
-            Group {
-                if isCurrentTrack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(AppColors.accentAdaptive.opacity(colorScheme == .dark ? 0.12 : 0.08))
-                }
-            }
-        )
-        .animation(.easeInOut(duration: 0.3), value: isCurrentTrack)
+        .buttonStyle(.plain)
+        .auroraSolid(cornerRadius: 16)
+        .overlay {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(AppColors.accentAdaptive.opacity(isCurrent ? 0.5 : 0), lineWidth: 1)
+        }
+        .animation(.easeInOut(duration: 0.25), value: isCurrent)
         .contextMenu {
             if let localURL = downloadManager.localURL(for: track) {
-                ShareLink(
-                    item: localURL,
-                    preview: SharePreview(track.title, image: Image(systemName: "music.note"))
-                ) {
+                ShareLink(item: localURL,
+                          preview: SharePreview(track.title, image: Image(systemName: "music.note"))) {
                     Label("Поделиться файлом", systemImage: "square.and.arrow.up")
                 }
             }
-            Button(action: { favoritesManager.toggle(track) }) {
+            Button { favoritesManager.toggle(track) } label: {
                 Label(
                     isFavorite ? "Убрать из избранного" : "Добавить в избранное",
                     systemImage: isFavorite ? "heart.slash" : "heart"
@@ -248,113 +208,111 @@ struct TrackRow: View {
         }
     }
 
-    private var trackThumbnail: some View {
-        let thumbSize: CGFloat = isIPad ? 52 : 46
-        let cornerRadius: CGFloat = isIPad ? 12 : 10
-        return ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(AppColors.background)
-                .frame(width: thumbSize, height: thumbSize)
-                .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 4, x: 2, y: 2)
-                .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 4, x: -2, y: -2)
+    private var statusGlyph: some View {
+        ZStack {
+            Circle()
+                .fill(isCurrent ? AppColors.accentTinted : AppColors.background)
+                .frame(width: 38, height: 38)
+                .overlay {
+                    Circle().strokeBorder(AppColors.stroke, lineWidth: 1)
+                }
 
-            if isCurrentTrack && radioPlayer.isFilePlaying {
-                MiniEqualizerView(isPlaying: true, maxHeight: isIPad ? 18 : 14)
-            } else if isCurrentTrack {
+            if isPlaying {
+                MiniEqualizerView(isPlaying: true, maxHeight: 14)
+            } else if isCurrent {
                 Image(systemName: "pause.fill")
-                    .font(.system(size: isIPad ? 16 : 14, weight: .medium))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppColors.accentAdaptive)
             } else {
                 Image(systemName: "music.note")
-                    .font(.system(size: isIPad ? 18 : 16, weight: .medium))
-                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary)
             }
         }
     }
 
-    private var favoriteButton: some View {
-        Button(action: {
-            HapticManager.lightImpact()
-            favoritesManager.toggle(track)
-        }) {
-            Image(systemName: isFavorite ? "heart.fill" : "heart")
-                .font(.system(size: isIPad ? 20 : 17, weight: .medium))
-                .foregroundStyle(isFavorite ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.6))
-                .symbolEffect(.bounce, value: isFavorite)
-                .contentShape(Rectangle())
+    private var actionsCluster: some View {
+        HStack(spacing: 14) {
+            // Favorite toggle
+            Button {
+                HapticManager.lightImpact()
+                favoritesManager.toggle(track)
+            } label: {
+                Image(systemName: isFavorite ? "heart.fill" : "heart")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(isFavorite ? AppColors.accentAdaptive : AppColors.textSecondary.opacity(0.7))
+                    .symbolEffect(.bounce, value: isFavorite)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            // Download / progress
+            downloadGlyph
+
+            // Play
+            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(AppGradients.accentGradient))
+                .shadow(color: AppColors.accent.opacity(0.3), radius: 6, y: 2)
         }
-        .buttonStyle(.plain)
     }
 
     @ViewBuilder
-    private var downloadButton: some View {
-        let iconSize: CGFloat = isIPad ? 26 : 22
+    private var downloadGlyph: some View {
         if isDownloaded {
-            Image(systemName: "arrow.down.circle.fill")
-                .font(.system(size: iconSize))
-                .foregroundStyle(AppColors.accentAdaptive.opacity(0.6))
-                .symbolRenderingMode(.hierarchical)
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(AppColors.success)
+                .frame(width: 32, height: 32)
         } else if let state = downloadManager.downloads[track.url] {
             switch state {
             case .downloading(let progress):
                 CircularProgressView(progress: progress)
-                    .frame(width: iconSize, height: iconSize)
+                    .frame(width: 18, height: 18)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         HapticManager.lightImpact()
                         downloadManager.cancelDownload(track)
                     }
             case .completed:
-                Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: iconSize))
-                    .foregroundStyle(AppColors.textSecondary)
-                    .symbolRenderingMode(.hierarchical)
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 18))
+                    .foregroundStyle(AppColors.success)
+                    .frame(width: 32, height: 32)
             case .failed:
-                Button(action: {
+                Button {
                     HapticManager.lightImpact()
                     downloadManager.download(track)
-                }) {
+                } label: {
                     Image(systemName: "exclamationmark.circle.fill")
-                        .font(.system(size: iconSize))
+                        .font(.system(size: 18))
                         .foregroundStyle(AppColors.error)
-                        .symbolRenderingMode(.hierarchical)
+                        .frame(width: 32, height: 32)
                 }
                 .buttonStyle(.plain)
             }
         } else {
-            Button(action: {
+            Button {
                 HapticManager.lightImpact()
                 downloadManager.download(track)
-            }) {
+            } label: {
                 Image(systemName: "arrow.down.circle")
-                    .font(.system(size: iconSize))
+                    .font(.system(size: 18, weight: .regular))
                     .foregroundStyle(AppColors.textSecondary)
+                    .frame(width: 32, height: 32)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
     }
 
-    private var playButton: some View {
-        Button(action: playTrack) {
-            ZStack {
-                Circle()
-                    .fill(AppColors.background)
-                    .frame(width: isIPad ? 38 : 32, height: isIPad ? 38 : 32)
-                    .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 3, x: 2, y: 2)
-                    .shadow(color: AppColors.shadowLight.opacity(0.6), radius: 3, x: -2, y: -2)
-
-                Image(systemName: isCurrentTrack && radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
-                    .font(.system(size: isIPad ? 14 : 12, weight: .semibold))
-                    .foregroundStyle(isCurrentTrack ? AppColors.accentAdaptive : AppColors.textPrimary)
-                    .offset(x: isCurrentTrack && radioPlayer.isFilePlaying ? 0 : 1)
-                    .contentTransition(.symbolEffect(.replace))
-            }
-        }
-        .buttonStyle(NeumorphicButtonStyle())
-    }
-
-    private func playTrack() {
+    private func play() {
         HapticManager.mediumImpact()
-        if isCurrentTrack && radioPlayer.isFilePlaying {
+        if isPlaying {
             radioPlayer.toggleFilePause()
         } else {
             let localURL = downloadManager.localURL(for: track)
@@ -363,7 +321,7 @@ struct TrackRow: View {
     }
 }
 
-// MARK: - Progress Ring
+// MARK: - Circular progress (used by FavoritesView too)
 
 struct CircularProgressView: View {
     let progress: Double
@@ -371,13 +329,10 @@ struct CircularProgressView: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(AppColors.textSecondary.opacity(0.15), lineWidth: 2.5)
+                .stroke(AppColors.textSecondary.opacity(0.2), lineWidth: 2.5)
             Circle()
                 .trim(from: 0, to: progress)
-                .stroke(
-                    AppGradients.accentGradient,
-                    style: StrokeStyle(lineWidth: 2.5, lineCap: .round)
-                )
+                .stroke(AppGradients.accentGradient, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.2), value: progress)
         }
