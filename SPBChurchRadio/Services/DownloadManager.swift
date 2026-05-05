@@ -17,15 +17,14 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
-    /// Ephemeral session — no shared cache, no cookies, no credential store.
-    /// Each download starts with a clean connection state, which prevents the
-    /// per-host keep-alive socket from the previous transfer from blocking the
-    /// next user-initiated download. We deliberately leave `waitsForConnectivity`
-    /// at its default `false` because the previous attempt to enable it caused
-    /// the next tap to silently wait for iOS to consider the network "stable"
-    /// after the prior socket teardown.
+    /// Default session — leverages the shared connection pool so HTTP/2
+    /// multiplexing works (one TCP+TLS handshake per host, multiple
+    /// downloads share the connection). The previous ephemeral workaround
+    /// was needed only while the server was HTTP/1.1; with HTTP/2 enabled
+    /// on `station.spbchurch.ru`, connection reuse is a win, not a hazard.
+    /// `waitsForConnectivity` stays at its default `false`.
     private let session: URLSession = {
-        let config = URLSessionConfiguration.ephemeral
+        let config = URLSessionConfiguration.default
         config.httpMaximumConnectionsPerHost = 6
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 600
@@ -93,11 +92,13 @@ class DownloadManager: ObservableObject {
         // begins, not after the next progress tick.
         downloads[track.url] = .downloading(progress: 0)
 
-        // Per-request fresh connection — explicitly tell the server not to
-        // keep the socket alive, so the next user-initiated download isn't
-        // stuck waiting for an OS-level keep-alive timeout.
-        var request = URLRequest(url: track.url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30)
-        request.setValue("close", forHTTPHeaderField: "Connection")
+        // Bypass intermediate caches but allow connection reuse — with HTTP/2
+        // the same TCP+TLS connection multiplexes all downloads to this host.
+        let request = URLRequest(
+            url: track.url,
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+            timeoutInterval: 30
+        )
 
         let task = session.downloadTask(with: request) { [weak self] tempURL, _, error in
             DispatchQueue.main.async {

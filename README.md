@@ -114,6 +114,21 @@ Editorial-glass палитра — нативный iOS-материал, тёп
 
 ## История изменений
 
+### v4.0.3 — HTTP/2 на сервере + reuse-friendly клиент
+Парный апдейт сервера и клиента, чтобы выжать оставшуюся задержку.
+
+**Сервер** (`server/nginx/stream.conf`):
+- `listen 443 ssl http2` — мультиплексирование нескольких загрузок через одно соединение, без переустановки TCP+TLS
+- `/mp3/` и `/sermons/` — `sendfile on; tcp_nopush on; Accept-Ranges bytes;` плюс 30-дневный кэш-заголовок
+- `limit_conn perip 20` (было 10) — запас для стрима + параллельных загрузок
+- `access_log /var/log/nginx/stream.access.log` (исправлен невалидный `access_log on;`)
+- `/radio` proxy сохраняет HTTP/1.1 + `proxy_buffering off` для icecast-стрима
+
+**Клиент** (`DownloadManager`):
+- Возврат с `URLSessionConfiguration.ephemeral` на `.default` — общий пул соединений теперь полезен (HTTP/2 multiplexing работает только при reuse)
+- Убран `Connection: close` из `URLRequest` — в HTTP/2 этого заголовка нет, в HTTP/1.1 keep-alive теперь экономит handshake
+- `requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData` остаётся — гарантия свежего mp3, без забытого старого ответа в кэше
+
 ### v4.0.2 — Устранение задержки между загрузками
 В v4.0.1 я включил `waitsForConnectivity = true` в URLSessionConfiguration — это оказалось вредно. Флаг заставлял iOS ждать «стабильную сеть» после teardown'а keep-alive сокета от предыдущей загрузки, из-за чего следующее нажатие «Скачать» висело несколько секунд, пока ОС не считала связь готовой.
 
