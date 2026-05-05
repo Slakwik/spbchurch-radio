@@ -253,7 +253,7 @@ struct SettingsView: View {
                     Text("SPBChurch Radio")
                         .font(.system(size: isIPad ? 17 : 15, weight: .semibold))
                         .foregroundStyle(AppColors.textPrimary)
-                    Text("Версия 3.12")
+                    Text("Версия 4.0 «Aurora»")
                         .font(.system(size: isIPad ? 13 : 12, weight: .regular))
                         .foregroundStyle(AppColors.textSecondary)
                 }
@@ -380,7 +380,7 @@ private struct AboutAppView: View {
                 .font(.system(size: isIPad ? 24 : 20, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
 
-            Text("Версия 3.12")
+            Text("Версия 4.0 «Aurora»")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(AppColors.textSecondary)
         }

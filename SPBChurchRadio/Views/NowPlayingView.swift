@@ -16,12 +16,7 @@ struct NowPlayingView: View {
 
     var body: some View {
         ZStack {
-            AppColors.background.ignoresSafeArea()
-
-            // Blurred album art background
-            if let track = player.currentTrack {
-                ArtworkViewBlurredBackground(url: track.url)
-            }
+            backgroundLayer
 
             VStack(spacing: 0) {
                 header
@@ -35,30 +30,71 @@ struct NowPlayingView: View {
         }
     }
 
+    // MARK: - Background — blurred artwork halo
+
+    private var backgroundLayer: some View {
+        ZStack {
+            AppColors.background
+            if let track = player.currentTrack {
+                ArtworkViewBlurredBackground(url: track.url)
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    // MARK: - Header — minimal: drag handle + close
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            // Top drag handle (decorative)
+            RoundedRectangle(cornerRadius: 3)
+                .fill(AppColors.textSecondary.opacity(0.25))
+                .frame(width: 38, height: 5)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.leading, 44)
+                .padding(.trailing, 0)
+
+            Button {
+                HapticManager.lightImpact()
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, isLandscape ? 6 : 10)
+    }
+
     // MARK: - Portrait
 
     private var portraitContent: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 10)
-
-            // Dotted artwork ring with progress
-            if let track = player.currentTrack {
-                dottedProgressArtwork(track: track, artSize: 220, ringSize: 270)
-            }
-
-            // Track info
-            trackInfo
-                .padding(.top, 20)
-
-            // Seek slider
-            seekSlider
-                .padding(.horizontal, 36)
-                .padding(.top, 16)
-
             Spacer(minLength: 16)
 
-            // Bottom controls
-            bottomControls
+            heroArtwork(size: 280)
+
+            Spacer(minLength: 24)
+
+            trackTitleBlock
+                .padding(.horizontal, 32)
+
+            Spacer(minLength: 18)
+
+            seekSlider
+                .padding(.horizontal, 32)
+
+            Spacer(minLength: 22)
+
+            transportControls
+                .padding(.horizontal, 32)
+
+            Spacer(minLength: 22)
+
+            utilityRow
                 .padding(.horizontal, 24)
                 .padding(.bottom, 20)
         }
@@ -67,56 +103,209 @@ struct NowPlayingView: View {
     // MARK: - Landscape
 
     private var landscapeContent: some View {
-        HStack(spacing: 24) {
-            Spacer()
+        HStack(spacing: 28) {
+            heroArtwork(size: 180)
+                .padding(.leading, 16)
+
+            VStack(spacing: 14) {
+                Spacer()
+                trackTitleBlock
+                seekSlider
+                transportControls
+                utilityRow
+                Spacer()
+            }
+            .frame(maxWidth: 360)
+            .padding(.trailing, 16)
+        }
+    }
+
+    // MARK: - Hero artwork (square with thin progress ring)
+
+    private func heroArtwork(size: CGFloat) -> some View {
+        let ringSize = size + 26
+        return ZStack {
+            // Thin progress ring around artwork — matches the gold accent
+            Circle()
+                .stroke(AppColors.stroke, lineWidth: 3)
+                .frame(width: ringSize, height: ringSize)
+
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(
+                    AppGradients.accentGradient,
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                )
+                .frame(width: ringSize, height: ringSize)
+                .rotationEffect(.degrees(-90))
+                .animation(.linear(duration: 0.4), value: progress)
 
             if let track = player.currentTrack {
-                dottedProgressArtwork(track: track, artSize: 140, ringSize: 175)
+                ArtworkViewFrosted(url: track.url, size: size)
+                    .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.18), radius: 28, y: 14)
             }
-
-            VStack(spacing: 12) {
-                Spacer()
-                trackInfo
-                seekSlider
-                    .frame(maxWidth: 320)
-                bottomControls
-                    .frame(maxWidth: 320)
-                Spacer()
-            }
-
-            Spacer()
         }
     }
 
-    // MARK: - Header
+    // MARK: - Track Title
 
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text("Музыка")
-                .font(.system(size: 24, weight: .bold))
+    private var trackTitleBlock: some View {
+        VStack(spacing: 6) {
+            Text(player.currentTrack?.title ?? "")
+                .font(.system(size: isLandscape ? 18 : 22, weight: .bold))
                 .foregroundStyle(AppColors.textPrimary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
 
+            Text("SPBChurch Radio")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(AppColors.textSecondary)
+        }
+    }
+
+    // MARK: - Seek slider
+
+    private var seekSlider: some View {
+        VStack(spacing: 6) {
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(AppColors.textSecondary.opacity(0.18))
+                        .frame(height: 4)
+
+                    Capsule()
+                        .fill(AppGradients.accentGradient)
+                        .frame(width: max(0, geo.size.width * progress), height: 4)
+
+                    Circle()
+                        .fill(AppColors.accentAdaptive)
+                        .frame(width: 14, height: 14)
+                        .overlay(Circle().strokeBorder(.white, lineWidth: 2))
+                        .shadow(color: AppColors.accent.opacity(0.4), radius: 4, y: 2)
+                        .offset(x: max(0, geo.size.width * progress - 7))
+                }
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            let newProgress = max(0, min(1, value.location.x / geo.size.width))
+                            player.seek(to: newProgress * player.duration)
+                        }
+                )
+            }
+            .frame(height: 14)
+
+            HStack {
+                Text(formatTime(player.currentTime))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppColors.textPrimary)
+                Spacer()
+                Text(formatTime(player.duration))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+        }
+    }
+
+    // MARK: - Transport controls
+
+    private var transportControls: some View {
+        HStack(spacing: 0) {
             Spacer()
 
-            // Mini equalizer in header
-            MiniEqualizerView(isPlaying: radioPlayer.isFilePlaying)
-
-            Button(action: {
+            Button {
                 HapticManager.lightImpact()
-                dismiss()
-            }) {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary)
-                    .frame(width: 44, height: 44)
+                radioPlayer.playPrevious()
+            } label: {
+                Image(systemName: "backward.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 64, height: 64)
                     .contentShape(Rectangle())
             }
+
+            Spacer()
+
+            Button {
+                HapticManager.mediumImpact()
+                radioPlayer.toggleFilePause()
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(AppGradients.accentGradient)
+                        .frame(width: 88, height: 88)
+                        .shadow(color: AppColors.accent.opacity(0.45), radius: 18, y: 8)
+
+                    Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundStyle(.white)
+                        .contentTransition(.symbolEffect(.replace))
+                }
+            }
+            .buttonStyle(PressEffectButtonStyle())
+
+            Spacer()
+
+            Button {
+                HapticManager.lightImpact()
+                radioPlayer.playNext()
+            } label: {
+                Image(systemName: "forward.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 64, height: 64)
+                    .contentShape(Rectangle())
+            }
+
+            Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.top, isLandscape ? 8 : 12)
     }
 
-    // MARK: - Track Actions Menu (replaces time-display widget)
+    // MARK: - Utility row — order, favorite, actions
+
+    private var utilityRow: some View {
+        HStack(spacing: 0) {
+            // Playback order (cycles shuffle / repeatAll / playOnce)
+            Button {
+                HapticManager.selection()
+                player.order = player.order.next
+            } label: {
+                VStack(spacing: 3) {
+                    Image(systemName: player.order.iconName)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.accentAdaptive)
+                        .contentTransition(.symbolEffect(.replace))
+                    Text(player.order.displayName)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            // Favorite
+            if let track = player.currentTrack {
+                let isFav = favoritesManager.isFavorite(track)
+                Button {
+                    HapticManager.mediumImpact()
+                    favoritesManager.toggle(track)
+                } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: isFav ? "heart.fill" : "heart")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(isFav ? AppColors.accentAdaptive : AppColors.textPrimary)
+                            .symbolEffect(.bounce, value: isFav)
+                        Text("Любимые")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+
+            // Actions menu (download / share / remove download)
+            trackActionsMenu
+        }
+    }
 
     @ViewBuilder
     private var trackActionsMenu: some View {
@@ -130,10 +319,10 @@ struct NowPlayingView: View {
             }()
 
             Menu {
-                Button(action: {
+                Button {
                     HapticManager.lightImpact()
                     favoritesManager.toggle(track)
-                }) {
+                } label: {
                     Label(
                         isFav ? "Убрать из избранного" : "Добавить в избранное",
                         systemImage: isFav ? "heart.slash" : "heart"
@@ -148,269 +337,40 @@ struct NowPlayingView: View {
                         Label("Поделиться файлом", systemImage: "square.and.arrow.up")
                     }
 
-                    Button(role: .destructive, action: {
+                    Button(role: .destructive) {
                         HapticManager.lightImpact()
                         downloadManager.deleteDownload(track)
-                    }) {
+                    } label: {
                         Label("Удалить загрузку", systemImage: "trash")
                     }
                 } else if isDownloading {
-                    Button(action: {
+                    Button {
                         HapticManager.lightImpact()
                         downloadManager.cancelDownload(track)
-                    }) {
+                    } label: {
                         Label("Отменить загрузку", systemImage: "xmark.circle")
                     }
                 } else {
-                    Button(action: {
+                    Button {
                         HapticManager.mediumImpact()
                         downloadManager.download(track)
-                    }) {
+                    } label: {
                         Label("Скачать трек", systemImage: "arrow.down.circle")
                     }
                 }
             } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "line.3.horizontal")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppColors.accentAdaptive)
-                    Text("Действия")
-                        .font(.system(size: 10, weight: .bold))
+                VStack(spacing: 3) {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text("Ещё")
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(AppColors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 65)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .neumorphicRaised(cornerRadius: 16)
             .simultaneousGesture(TapGesture().onEnded { HapticManager.lightImpact() })
-        }
-    }
-
-    // MARK: - Dotted Progress Artwork
-
-    private func dottedProgressArtwork(track: Track, artSize: CGFloat, ringSize: CGFloat) -> some View {
-        let dotCount = 36
-
-        return ZStack {
-            // Dotted ring — filled portion shows progress with accent color
-            ForEach(0..<dotCount, id: \.self) { i in
-                let angle = Double(i) / Double(dotCount) * 360.0
-                let normalizedPos = Double(i) / Double(dotCount)
-                let isFilled = normalizedPos <= progress
-                let dotSize: CGFloat = i % 4 == 0 ? 7 : 4.5
-
-                Circle()
-                    .fill(
-                        isFilled
-                        ? AppColors.accentAdaptive
-                        : AppColors.textSecondary.opacity(0.15)
-                    )
-                    .frame(width: dotSize, height: dotSize)
-                    .offset(y: -ringSize / 2)
-                    .rotationEffect(.degrees(angle - 90))
-                    .animation(.linear(duration: 0.3), value: progress)
-            }
-
-            // Frosted artwork
-            ArtworkViewFrosted(url: track.url, size: artSize)
-                .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 20, x: 10, y: 10)
-                .shadow(color: AppColors.shadowLight, radius: 20, x: -10, y: -10)
-        }
-        .frame(width: ringSize + 20, height: ringSize + 20)
-    }
-
-    // MARK: - Track Info
-
-    private var trackInfo: some View {
-        VStack(spacing: 4) {
-            Text(player.currentTrack?.title ?? "")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(AppColors.textPrimary)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-
-            Text("SPBChurch Radio")
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(AppColors.textSecondary)
-        }
-        .padding(.horizontal, 30)
-    }
-
-    // MARK: - Seek Slider
-
-    private var seekSlider: some View {
-        VStack(spacing: 6) {
-            // Slider
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    // Background track
-                    Capsule()
-                        .fill(AppColors.textSecondary.opacity(0.15))
-                        .frame(height: 4)
-
-                    // Filled track
-                    Capsule()
-                        .fill(AppGradients.accentGradient)
-                        .frame(width: max(0, geo.size.width * progress), height: 4)
-                }
-                .contentShape(Rectangle())
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { value in
-                            let newProgress = max(0, min(1, value.location.x / geo.size.width))
-                            let newTime = newProgress * player.duration
-                            player.seek(to: newTime)
-                        }
-                )
-            }
-            .frame(height: 4)
-
-            // Time labels
-            HStack {
-                Text(formatTime(player.currentTime))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(AppColors.textPrimary)
-
-                Spacer()
-
-                Text(formatTime(player.duration))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-        }
-    }
-
-    // MARK: - Bottom Controls
-
-    private var bottomControls: some View {
-        HStack(spacing: 14) {
-            // Speed widget
-            VStack(spacing: 12) {
-                // Playback order toggle — cycles shuffle → repeatAll → playOnce
-                Button(action: {
-                    HapticManager.selection()
-                    player.order = player.order.next
-                }) {
-                    VStack(spacing: 4) {
-                        Image(systemName: player.order.iconName)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(AppColors.accentAdaptive)
-                            .contentTransition(.symbolEffect(.replace))
-                        Text(player.order.displayName)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 65)
-                .neumorphicRaised(cornerRadius: 16)
-
-                // Track actions menu (replaces the old time-display widget)
-                trackActionsMenu
-            }
-            .frame(maxWidth: .infinity)
-
-            // Click wheel
-            clickWheel
-        }
-    }
-
-    // MARK: - Click Wheel
-
-    private var clickWheel: some View {
-        let wheelSize: CGFloat = 150
-        let centerSize: CGFloat = 52
-
-        return ZStack {
-            Circle()
-                .fill(AppColors.background)
-                .frame(width: wheelSize, height: wheelSize)
-                .shadow(color: AppColors.shadowDark, radius: 10, x: 6, y: 6)
-                .shadow(color: AppColors.shadowLight, radius: 10, x: -6, y: -6)
-
-            // Menu dots (top)
-            VStack(spacing: 3) {
-                HStack(spacing: 3) {
-                    ForEach(0..<2, id: \.self) { _ in
-                        Circle().fill(AppColors.textPrimary.opacity(0.4))
-                            .frame(width: 4, height: 4)
-                    }
-                }
-                HStack(spacing: 3) {
-                    ForEach(0..<2, id: \.self) { _ in
-                        Circle().fill(AppColors.textPrimary.opacity(0.4))
-                            .frame(width: 4, height: 4)
-                    }
-                }
-            }
-            .offset(y: -wheelSize * 0.28)
-
-            // Rewind (left)
-            Button(action: {
-                HapticManager.lightImpact()
-                radioPlayer.playPrevious()
-            }) {
-                Image(systemName: "backward.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
-                    .frame(width: 44, height: 44)
-            }
-            .offset(x: -wheelSize * 0.28)
-
-            // Forward (right)
-            Button(action: {
-                HapticManager.lightImpact()
-                radioPlayer.playNext()
-            }) {
-                Image(systemName: "forward.fill")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(AppColors.textPrimary.opacity(0.5))
-                    .frame(width: 44, height: 44)
-            }
-            .offset(x: wheelSize * 0.28)
-
-            // Pause (bottom)
-            Image(systemName: "pause.fill")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(AppColors.textPrimary.opacity(0.4))
-                .offset(y: wheelSize * 0.28)
-
-            // Center button
-            Button(action: {
-                HapticManager.mediumImpact()
-                radioPlayer.toggleFilePause()
-            }) {
-                ZStack {
-                    Circle()
-                        .fill(AppColors.background)
-                        .frame(width: centerSize, height: centerSize)
-                        .shadow(color: AppColors.shadowDark.opacity(0.4), radius: 4, x: 2, y: 2)
-                        .shadow(color: AppColors.shadowLight.opacity(0.8), radius: 4, x: -2, y: -2)
-
-                    Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(radioPlayer.isFilePlaying ? AppColors.accentAdaptive : AppColors.textPrimary)
-                        .offset(x: radioPlayer.isFilePlaying ? 0 : 2)
-                        .contentTransition(.symbolEffect(.replace))
-                }
-            }
-            .buttonStyle(NeumorphicButtonStyle())
-
-            // Decorative dots
-            VStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { _ in
-                    HStack(spacing: 4) {
-                        ForEach(0..<3, id: \.self) { _ in
-                            Circle()
-                                .fill(AppColors.textSecondary.opacity(0.15))
-                                .frame(width: 3, height: 3)
-                        }
-                    }
-                }
-            }
-            .offset(x: wheelSize * 0.42, y: wheelSize * 0.42)
         }
     }
 
@@ -424,7 +384,7 @@ struct NowPlayingView: View {
     }
 }
 
-// MARK: - Blurred Background Artwork
+// MARK: - Blurred background artwork
 
 private struct ArtworkViewBlurredBackground: View {
     let url: URL
@@ -438,11 +398,11 @@ private struct ArtworkViewBlurredBackground: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .blur(radius: 40)
+                    .blur(radius: 50)
                     .overlay(
                         colorScheme == .dark
-                        ? Color.black.opacity(0.7)
-                        : AppColors.background.opacity(0.75)
+                        ? Color.black.opacity(0.55)
+                        : AppColors.background.opacity(0.65)
                     )
                     .ignoresSafeArea()
             }
@@ -451,9 +411,7 @@ private struct ArtworkViewBlurredBackground: View {
             if let cached = ArtworkService.shared.cachedArtwork(for: url) {
                 image = cached
             } else {
-                ArtworkService.shared.artwork(for: url) { img in
-                    image = img
-                }
+                ArtworkService.shared.artwork(for: url) { img in image = img }
             }
         }
         .animation(.easeInOut(duration: 0.5), value: image != nil)

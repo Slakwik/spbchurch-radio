@@ -13,37 +13,36 @@ struct MiniPlayerBar: View {
     var body: some View {
         if let track = radioPlayer.filePlayer.currentTrack {
             VStack(spacing: 0) {
-                // Progress line with accent color
+                // Hairline progress
                 GeometryReader { geo in
                     let progress = radioPlayer.filePlayer.duration > 0
                         ? radioPlayer.filePlayer.currentTime / radioPlayer.filePlayer.duration
                         : 0
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(AppColors.textSecondary.opacity(0.1))
-                            .frame(height: 3)
+                            .fill(AppColors.textSecondary.opacity(0.12))
+                            .frame(height: 2)
                         Capsule()
                             .fill(AppGradients.accentGradient)
-                            .frame(width: geo.size.width * progress, height: 3)
+                            .frame(width: geo.size.width * progress, height: 2)
                             .animation(.linear(duration: 0.3), value: progress)
                     }
                 }
-                .frame(height: 3)
-                .padding(.horizontal, 14)
+                .frame(height: 2)
 
-                HStack(spacing: isIPad ? 14 : 10) {
-                    // Artwork thumbnail — tap opens Now Playing
-                    Button(action: {
+                HStack(spacing: 12) {
+                    // Artwork tile + tap to open NowPlaying
+                    Button {
                         HapticManager.lightImpact()
                         showNowPlaying = true
-                    }) {
+                    } label: {
                         ZStack {
-                            ArtworkView(url: track.url, size: isIPad ? 42 : 36, cornerRadius: 8)
+                            ArtworkView(url: track.url, size: 40, cornerRadius: 10)
 
                             if radioPlayer.isFilePlaying {
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(AppColors.background.opacity(0.4))
-                                    .frame(width: isIPad ? 42 : 36, height: isIPad ? 42 : 36)
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(.black.opacity(0.35))
+                                    .frame(width: 40, height: 40)
 
                                 MiniEqualizerView(isPlaying: true, barCount: 3, maxHeight: 12)
                             }
@@ -51,14 +50,14 @@ struct MiniPlayerBar: View {
                     }
                     .buttonStyle(.plain)
 
-                    // Title — tap opens Now Playing
-                    Button(action: {
+                    // Title block — also opens NowPlaying
+                    Button {
                         HapticManager.lightImpact()
                         showNowPlaying = true
-                    }) {
-                        VStack(alignment: .leading, spacing: 2) {
+                    } label: {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text(track.title)
-                                .font(.system(size: isIPad ? 15 : 13, weight: .medium))
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(AppColors.textPrimary)
                                 .lineLimit(1)
 
@@ -70,71 +69,64 @@ struct MiniPlayerBar: View {
                     }
                     .buttonStyle(.plain)
 
-                    // Controls
-                    HStack(spacing: isIPad ? 16 : 10) {
-                        Button(action: {
+                    HStack(spacing: 6) {
+                        Button {
                             HapticManager.lightImpact()
                             radioPlayer.playPrevious()
-                        }) {
+                        } label: {
                             Image(systemName: "backward.fill")
-                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(AppColors.textPrimary)
+                                .frame(width: 36, height: 36)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
 
-                        Button(action: {
+                        Button {
                             HapticManager.mediumImpact()
                             radioPlayer.toggleFilePause()
-                        }) {
-                            ZStack {
-                                Circle()
-                                    .fill(AppColors.background)
-                                    .frame(width: isIPad ? 38 : 32, height: isIPad ? 38 : 32)
-                                    .shadow(color: AppColors.shadowDark.opacity(0.3), radius: 3, x: 2, y: 2)
-                                    .shadow(color: AppColors.shadowLight.opacity(0.5), radius: 3, x: -2, y: -2)
-
-                                Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
-                                    .font(.system(size: isIPad ? 16 : 13, weight: .semibold))
-                                    .foregroundStyle(AppColors.accentAdaptive)
-                                    .contentTransition(.symbolEffect(.replace))
-                            }
+                        } label: {
+                            Image(systemName: radioPlayer.isFilePlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 36, height: 36)
+                                .background(Circle().fill(AppGradients.accentGradient))
+                                .shadow(color: AppColors.accent.opacity(0.4), radius: 6, y: 2)
                         }
                         .buttonStyle(.plain)
 
-                        Button(action: {
+                        Button {
                             HapticManager.lightImpact()
                             radioPlayer.playNext()
-                        }) {
+                        } label: {
                             Image(systemName: "forward.fill")
-                                .font(.system(size: isIPad ? 15 : 13, weight: .semibold))
+                                .font(.system(size: 13, weight: .semibold))
                                 .foregroundStyle(AppColors.textPrimary)
+                                .frame(width: 36, height: 36)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
 
-                        Button(action: {
+                        Button {
                             HapticManager.lightImpact()
                             withAnimation(.spring(response: 0.3)) {
                                 radioPlayer.filePlayer.stop()
                                 radioPlayer.activeMode = .none
                             }
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: isIPad ? 24 : 20))
-                                .foregroundStyle(AppColors.textSecondary.opacity(0.4))
-                                .symbolRenderingMode(.hierarchical)
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(AppColors.textSecondary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, isIPad ? 18 : 14)
-                .padding(.vertical, isIPad ? 12 : 10)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppColors.background)
-                    .shadow(color: AppColors.shadowDark, radius: 10, x: 4, y: 4)
-                    .shadow(color: AppColors.shadowLight, radius: 10, x: -4, y: -4)
-            )
+            .auroraGlass(cornerRadius: 18)
             .fullScreenCover(isPresented: $showNowPlaying) {
                 NowPlayingView()
                     .environmentObject(radioPlayer)

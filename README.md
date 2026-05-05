@@ -97,21 +97,39 @@ SPBChurchRadio/
     └── SettingsView.swift                — настройки (тема, ссылки, о приложении)
 ```
 
-## Цветовая палитра
+## Цветовая палитра «Aurora»
 
-Neumorphic палитра в стиле AirOS Music Player с поддержкой Dark Mode:
+Editorial-glass палитра — нативный iOS-материал, тёплая бронза вместо жёлтого золота, hairline-stroke карточки.
 
-| Цвет | Light Hex | Dark Hex | Назначение |
-|------|-----------|----------|------------|
-| Background | `#F0F0F3` | `#1C1C24` | Основной фон (neumorphic base) |
-| Surface | `#F2F2F5` | `#26262E` | Карточки, поднятые элементы |
-| Shadow Light | `#FFFFFF` | `#FFFFFF` | Светлая тень (верх-лево) |
-| Shadow Dark | `#A8ABB5` | `#000000` | Тёмная тень (низ-право) |
-| Text Primary | `#1F1F24` | `#F2F2F5` | Основной текст |
-| Text Secondary | `#737380` | `#9999A6` | Вторичный текст |
-| Accent | `#D4A23A` | `#E8BE5A` | Золотой акцент |
+| Цвет | Light | Dark | Назначение |
+|------|-------|------|------------|
+| Background | `#FAFAF7` | `#0E0E12` | Основной фон |
+| Surface | `#FFFFFF` | `#1C1C22` | Карточки |
+| Stroke (hairline) | `#E6E4DE` | `#2A2A2E` | Тонкая обводка карточек |
+| Text Primary | `#0E0E12` | `#F5F4F0` | Основной текст |
+| Text Secondary | `#73706A` | `#9C9890` | Вторичный текст |
+| Accent (бронза) | `#B8842A` | `#D9A445` | Главный акцент, заливные CTA |
+| Success | `#2E7D5B` | `#4DB081` | Подтверждения |
+| Error | `#B33A3A` | `#D95A5A` | Ошибки |
 
 ## История изменений
+
+### v4.0 «Aurora» — Editorial-glass редизайн
+Полная визуальная переработка с сохранением функционала.
+
+**Концепция:** уход от тяжёлых neumorphic-теней к нативному iOS-материалу с тонкими hairline-stroke и решительной типографикой. Акцент золота — точечный, для главных CTA.
+
+- **Палитра** обновлена. Light: фон `#FAFAF7` (тёплый off-white), surface чисто белый, hairline `#E6E4DE`, акцент бронзовый `#B8842A` (вместо жёлтого золота). Dark: фон `#0E0E12`, surface `#1C1C22`, акцент `#D9A445`. Полная адаптивность через `Color(light:dark:)`
+- **Типографика** — `display(44pt)` для заголовков экранов (`tracking: -1`), мелкие caps с `tracking: 2` для метаданных. Чистый SF Pro без `.rounded`
+- **Aurora модификаторы** заменили neumorphic'и: `auroraGlass()` (`.regularMaterial` + hairline + soft drop shadow), `auroraSolid()`, `auroraTonalPill()` (для secondary CTA в акцентном tinted-фоне). Старые `neumorphic*` модификаторы оставлены как shim'ы для совместимости
+- **Радио** — solid filled gold play/stop кнопка 144/168pt с glow-shadow в акцентном цвете; типография «Радио / SPBCHURCH» 44pt + 11pt caps; tonal pill «Найти в библиотеке»; маленький status-индикатор «● В ЭФИРЕ»; glass-карточка играющего файла внизу
+- **Плеер** — hero artwork 280pt в прозрачном круге с тонким accent-progress ring; крупные transport-кнопки (88pt play в gold-gradient с glow); slider с tactile knob (gold dot + white border); utility row из 3 столбцов (Микс / Любимые / Ещё) с лейблами под иконками. Header минимальный — drag handle + `chevron.down`
+- **Списки** (Треки / Избранное / Загрузки) — карточные строки на `.auroraSolid` фоне с hairline, gold-обводка для активного трека, current-status glyph (mini equalizer / pause / heart / checkmark) в круге, accent-circle play-кнопка в правом краю с gold gradient + glow
+- **Mini player** — glass-кард, accent-gradient play-кнопка с glow, тонкий progress-line вверху (2pt вместо 3)
+- **Tab bar** — translucent через `UIBlurEffect.systemUltraThinMaterial*`, чистый hairline border
+- **Контекстные меню** на long-press для Поделиться + Избранное в Треках/Избранном
+- **Сохранён весь функционал v3.12**: трёхрежимный порядок воспроизведения, action-меню в плеере, контекстная очередь, офлайн-индекс загрузок, Поделиться через ShareLink, поиск играющего трека
+- Новые скриншоты в `screenshots/` соответствуют v4.0
 
 ### v3.12 — Большая кнопка эфира, action-меню в плеере, трёхрежимный порядок
 - **Кнопка play/stop радио** увеличена в 1.5× (144pt iPhone / 162pt iPad), золотая обводка теперь всегда видна — в покое 35% opacity, в эфире 70%. Иконка стабильно центрирована в круге, не съезжает при смене состояния
