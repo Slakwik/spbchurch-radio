@@ -17,6 +17,17 @@ class DownloadManager: ObservableObject {
         case failed(Error)
     }
 
+    /// Result of the synchronous file-move phase inside the URLSession
+    /// completion handler. Defined at type scope rather than nested in a
+    /// closure to keep Swift's metadata generation predictable.
+    private enum MoveOutcome {
+        case moved(URL)
+        case failed(Error)
+        case noFile
+        case cancelled
+        case netError(Error)
+    }
+
     /// Ephemeral session — no shared cache, no cookies, no credential store.
     /// We tried the default session to leverage HTTP/2 multiplexing, but in
     /// practice the keep-alive sockets from a previous download still cause a
@@ -110,14 +121,6 @@ class DownloadManager: ObservableObject {
             // before this closure returns — the moment we leave, URLSession
             // deletes the temp file. Doing the move inside DispatchQueue.main
             // .async would race against that cleanup.
-            enum MoveOutcome {
-                case moved(URL)
-                case failed(Error)
-                case noFile
-                case cancelled
-                case netError(Error)
-            }
-
             let outcome: MoveOutcome
             if let error = error {
                 if (error as NSError).code == NSURLErrorCancelled {
